@@ -1,19 +1,25 @@
 {
-    "serverAddress": "localhost",
-    "serverName": "Node Y56 Intranet",
+    "year": "2145",
+    "serverAddress": "UCC_Gladiator",
+    "serverName": "UCC Gladiator Tactical Network",
     "iconName": "Moon-icon.png",
-    "terminalID": "Y56",
+    "terminalID": "UCC-GLD",
     "defaultUser": {
-        "userId": "user",
+        "userId": "visitor",
         "password": "",
-        "userName": "anonymous"
+        "userName": "UNREGISTERED TERMINAL USER"
     },
     "initialHistory": {
-        "user": [
-            "login admin@admin"
-        ],
-        "admin": [
-            "ping fbi.gov"
+        "visitor": [
+            "echo === 联邦航舰【角斗士号】 战术终端 ===",
+            "echo 登入接口：UCC-GLADIATOR / Mission Node-Callisto",
+            "echo 状态：在线 ▪ 访问级别：未授权访客",
+            "echo ----------------------------------",
+            "echo 警告：任务简报、行动指令与个人档案均属机密",
+            "echo 仅限角斗士号现役船员存取",
+            "echo ",
+            "echo 输入 login [user]@[password] 以验证身份",
+            "echo ----------------------------------"
         ]
     }
 }
