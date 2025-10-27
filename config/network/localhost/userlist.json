@@ -1,31 +1,31 @@
 [
   {
-    "userId": "martin",
+    "id": "martin",
     "password": "snowriver",
     "userName": "马丁·史密斯 / 角斗士号机械师"
   },
   {
-    "userId": "lola",
+    "id": "lola",
     "password": "virtequal",
-    "userName": "萝拉·沃伊特 / 驾驶员/虚拟造梦者"
+    "userName": "萝拉·沃伊特 / 驾驶员&虚拟造梦者"
   },
   {
-    "userId": "vincent",
+    "id": "vincent",
     "password": "lola4ever",
     "userName": "文森特·戴尔加图 / 情报&黑客"
   },
   {
-    "userId": "diana",
+    "id": "diana",
     "password": "neverlost",
     "userName": "戴安娜·埃弗里特 / 医疗官"
   },
   {
-    "userId": "andrew",
+    "id": "andrew",
     "password": "no_meat",
     "userName": "安德鲁·菲斯克 / 外交官"
   },
   {
-    "userId": "damien",
+    "id": "damien",
     "password": "takeearthback",
     "userName": "达米恩·冈恩 / 炮手&安保"
   }
