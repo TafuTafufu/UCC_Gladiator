@@ -1,7 +1,7 @@
 {
   "year": "2145",
   "serverAddress": "UUC_Gladiator",
-  "serverName": "UUC Gladiator Tactical Network\n=== 联邦航舰【角斗士号】 战术终端 ===\n访客接入节点：UUC-GLADIATOR / Mission Node-Callisto\n访问级别：未授权访客  |  Ω-3 级监控启用\n警告：本终端所有记录受 UUC 战术网加密监管\n请使用 login [user]:[password] 认证身份\n示例：login martin:snowriver",
+  "serverName": "UUC Gladiator Tactical Network",
   "iconName": "UUC_Gladiator.jpg",
   "terminalID": "UUC-GLD",
   "defaultUser": {
