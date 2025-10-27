@@ -3,7 +3,7 @@
   "serverAddress": "UUC_Gladiator",
   "serverName": "UUC Gladiator Tactical Network",
   "iconName": "UUC_Gladiator.jpg",
-  "terminalID": "UUC-GLD",
+  "terminalID": "UCC-GLD",
   "defaultUser": {
     "userId": "visitor",
     "password": "",
