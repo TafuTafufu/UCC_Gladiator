@@ -1,38 +1,63 @@
 {
-    "demo.exe": {
-        "help": "Demonstrate some rendering features",
-        "clear": true,
-        "message": [
-            "<p class=glow style='font-size: 3em'>⚠ ACHTUNG ⚠</p>",
-            "<p class=desync>SHADY TROUBLING MESSAGE</p>",
-            "<img src=config/network/11.152.9.6/tech.jpg style='width: 10rem' class=glitch>",
-            "<p class=shimmer>Zombie ipsum reversus ab viral inferno, nam rick grimes malum cerebro. De carne lumbering animata corpora quaeritis. Summus brains sit​​, morbo vel maleficia?</p>",
-            "<p class=hack-reveal data-alphabet=uppercase data-iterations-before-reveal=0 data-preserve-spaces=true>All your base are belong to us</p>",
-            "<img src=hacker.jpg class=particle data-particules=2000>"
-        ]
-    },
-    "cdata.exe": {
-        "protection": ["admin"],
-        "delayed": 2000,
-        "message": [
-            "Corrupting data.",
-            "Corrupting data..",
-            "Corrupting data...",
-            "0% complete",
-            "11% complete",
-            "47% complete",
-            "98% complete",
-            "System successfully corrupted!"
-        ]
-    },
-    "target.exe": {
-        "location": ["127.0.0.1", "localhost"],
-        "message": [
-            "This <abbr title=\"tHeY aRe NoT hUmAn\"><s>person</s></abbr> is your target:",
-            "<img src=\"https://thispersondoesnotexist.com/image\" title=\"tHeY aRe NoT hUmAn\" style=\"width: 10rem; max-width: 100%;\">"
-        ]
-    },
-    "artifact": {},
-    "decrypt": {},
-    "identify": {}
+  "demo.exe": {
+    "help": "Demonstrate some rendering features",
+    "clear": true,
+    "message": [
+      "<p class=glow style='font-size: 3em'>⚠ ACHTUNG ⚠</p>",
+      "<p class=desync>SHADY TROUBLING MESSAGE</p>",
+      "<img src=config/network/11.152.9.6/tech.jpg style='width: 10rem' class=glitch>",
+      "<p class=shimmer>Zombie ipsum reversus ab viral inferno, nam rick grimes malum cerebro. De carne lumbering animata corpora quaeritis. Summus brains sit​​, morbo vel maleficia?</p>",
+      "<p class=hack-reveal data-alphabet=uppercase data-iterations-before-reveal=0 data-preserve-spaces=true>All your base are belong to us</p>",
+      "<img src=hacker.jpg class=particle data-particules=2000>"
+    ]
+  },
+  "cdata.exe": {
+    "protection": ["admin"],
+    "delayed": 2000,
+    "message": [
+      "Corrupting data.",
+      "Corrupting data..",
+      "Corrupting data...",
+      "0% complete",
+      "11% complete",
+      "47% complete",
+      "98% complete",
+      "System successfully corrupted!"
+    ]
+  },
+  "target.exe": {
+    "location": ["127.0.0.1", "localhost"],
+    "message": [
+      "This <abbr title=\"tHeY aRe NoT hUmAn\"><s>person</s></abbr> is your target:",
+      "<img src=\"https://thispersondoesnotexist.com/image\" title=\"tHeY aRe NoT hUmAn\" style=\"width: 10rem; max-width: 100%;\">"
+    ]
+  },
+  "artifact": {},
+  "decrypt": {},
+  "identify": {},
+  "ACKNOWLEDGE": {
+    "help": "发送任务回执至联邦行动司令部（大写 ACKNOWLEDGE）",
+    "clear": false,
+    "delayed": 120,
+    "message": [
+      "发送回执中...",
+      "信号匹配：UCC-GLADIATOR",
+      "频道加密：Ω-3",
+      "确认指令编号：A-2145-10-29-Ω3",
+      "<p class='glow'>通信回执已记录 ▪ 殖民联邦频道锁定中...</p>",
+      "任务状态：ACTIVE",
+      "",
+      "----- 收到来自：殖民联邦通信节点（自动回执） -----",
+      "时间戳：2145-10-29 21:11 UTC",
+      "优先级：HIGH / 回执确认",
+      "",
+      "致：UCC-角斗士号船员",
+      "",
+      "已接收你方回执。通信窗口已在内部记录，本次指令状态：ACTIVE。",
+      "请注意：除非接收到来自本部的新一轮授权信号，否则不得对外广播任务信息。",
+      "",
+      "若需进一步指令，请等待联络或通过舰桥发起加密请求。",
+      "----- 结束 -----"
+    ]
+  }
 }
