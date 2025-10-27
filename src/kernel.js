@@ -24,17 +24,11 @@ function debugObject( obj ) {
     }
 }
 
-/**
- * Set Header and Prompt informations.
- *
- * This function is useful to avoid code repetition.
- *
- * @param {String} msg A message to be showed when done
- */
-function setHeader( msg ) {
-    // Setting correct header icon and terminal name
+function setHeader(msg) {
+    // 设置 prompt 显示，比如 [UNREGISTERED TERMINAL USER@UUC-GLD] #
     const promptText = `[${ userDatabase.userName }@${ serverDatabase.terminalID }] # `;
 
+    // 组日期、图标等头部信息
     initDateObject();
     const dateStr = `${ serverDate.day }/${ serverDate.month }/${ serverDate.year }`;
     const imgUrl = `config/network/${ serverDatabase.serverAddress }/${ serverDatabase.iconName }`;
@@ -47,14 +41,46 @@ function setHeader( msg ) {
     ${ serverDatabase.headerExtraHTML || "" }
     <p>Enter "help" for more information.</p>
     `;
-    // Clear content:
+
+    // 清屏 & 清输入框
     output_.innerHTML = "";
     cmdLine_.value = "";
-    if ( term ) {
-        term.loadHistoryFromLocalStorage( serverDatabase.initialHistory );
+
+    // 载入浏览器里存过的历史（原本就有的逻辑）
+    if (term) {
+        term.loadHistoryFromLocalStorage(serverDatabase.initialHistory);
     }
-    output( [ header, msg ] ).then( () => applySFX() );
-    $( ".prompt" ).html( promptText );
+
+    // 我们要一次性输出到终端的所有内容
+    const linesToPrint = [];
+
+    // 1. 顶部 header
+    linesToPrint.push(header);
+
+    // 2. 你的开场警告 / 舰桥广播（来自 manifest.json -> initialHistory -> 当前用户的 userId）
+    if (
+        serverDatabase.initialHistory &&
+        userDatabase &&
+        userDatabase.userId &&
+        serverDatabase.initialHistory[userDatabase.userId] &&
+        Array.isArray(serverDatabase.initialHistory[userDatabase.userId])
+    ) {
+        const bannerLines = serverDatabase.initialHistory[userDatabase.userId];
+        bannerLines.forEach(line => {
+            linesToPrint.push(line);
+        });
+    }
+
+    // 3. 比如 "Connection successful" 或 "Login successful"
+    if (msg) {
+        linesToPrint.push(msg);
+    }
+
+    // 打印到终端 + 应用那些特效（glitch, glow, etc）
+    output(linesToPrint).then(() => applySFX());
+
+    // 最后更新一下提示符左边那段 [xxx@xxx] #
+    $(".prompt").html(promptText);
 }
 
 /**
