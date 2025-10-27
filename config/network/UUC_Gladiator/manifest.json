@@ -2,7 +2,7 @@
   "year": "2145",
   "serverAddress": "UUC_Gladiator",
   "serverName": "UUC Gladiator Tactical Network",
-  "iconName": "Moon-icon.png",
+  "iconName": "UUC_Gladiator.jpg",
   "terminalID": "UCC-GLD",
   "defaultUser": {
     "userId": "visitor",
