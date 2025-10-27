@@ -9,24 +9,27 @@
     "password": "",
     "userName": "UNREGISTERED TERMINAL USER"
   },
-  "initialHistory": {
-    "visitor": [
-      "---------------------------------------------",
-      "*** UUC GLADIATOR TACTICAL NODE / CALLISTO RELAY ONLINE ***",
-      "=== 联邦航舰【角斗士号】 战术终端 ===",
-      "接入节点：UUC-GLADIATOR / Mission Node-Callisto",
-      "状态：在线；访客级别：未授权访客",
-      "Ω-3 安全通告：本终端受 UUC 战术网监控与加密保护。",
-      "所有指令、任务简报、医疗/工程记录、个人档案、通讯往来均属最高级机密。",
-      "未授权传播将触发自动封锁与远程回报。",
-      "---------------------------------------------",
-      "使用说明：",
-      "  login 用户名:密码",
-      "  示例：login userId:password",
-      "成功登录后，可输入 mail 查看你的舰上通信与任务通告。",
-      "输入 help 可查看完整指令列表。",
-      "---------------------------------------------",
-      ""
-    ]
-  }
+ "initialHistory": {
+  "visitor": [
+    "<span style='color:#888'>──────────────────────────────────────────────</span>",
+    "<span style='color:#ffa500'>*** UUC GLADIATOR TACTICAL NODE / CALLISTO RELAY ONLINE ***</span>",
+    "<span style='color:#ffa500'>=== 联邦航舰【角斗士号】 战术终端 ===</span>",
+    "<span style='color:#888'>接入节点：</span><span style='color:#50fa7b'>UUC-GLADIATOR / Mission Node-Callisto</span>",
+    "<span style='color:#888'>状态：</span><span style='color:#50fa7b'>在线</span><span style='color:#888'>；访客级别：</span><span style='color:#ff4d4d'>未授权访客</span> <span style='color:#ff4d4d'>⚠ 未授权访问</span>",
+    "",
+    "<span style='color:#ff4d4d'>Ω-3 安全通告：</span><span style='color:#fff'>本终端受 UUC 战术网监控与量子加密保护。</span>",
+    "<span style='color:#ff4d4d'>⚠ 机密告警：</span><span style='color:#fff'>所有指令、任务简报、医疗/工程记录、个人档案、通讯往来均属</span> <span style='color:#ff4d4d;font-weight:bold;'>最高级机密</span><span style='color:#fff'>。</span>",
+    "<span style='color:#ff4d4d'>🛑 禁止外传：</span><span style='color:#fff'>未授权传播将触发自动封锁与远程回报。</span> <span style='color:#ff4d4d'>⛔</span>",
+    "<span style='color:#888'>──────────────────────────────────────────────</span>",
+    "",
+    "<span style='color:#50fa7b'>使用说明 / Access Instructions ✅</span>",
+    "<span style='color:#888'>login 用户名:密码</span>",
+    "<span style='color:#888'>示例：</span><span style='color:#50fa7b'>login userId:password</span>",
+    "",
+    "<span style='color:#888'>成功登录后，可输入 </span><span style='color:#50fa7b'>mail</span><span style='color:#888'> 查看你的舰上通信与任务通告。</span>",
+    "<span style='color:#888'>输入 </span><span style='color:#50fa7b'>help</span><span style='color:#888'> 可查看完整指令列表。</span>",
+    "",
+    "<span style='color:#888'>──────────────────────────────────────────────</span>"
+  ]
+}
 }
