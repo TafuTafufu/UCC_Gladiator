@@ -3,7 +3,7 @@
   "serverAddress": "UUC_Gladiator",
   "serverName": "UUC Gladiator Tactical Network",
   "iconName": "UUC_Gladiator.jpg",
-  "terminalID": "UCC-GLD",
+  "terminalID": "UUC-GLD",
   "defaultUser": {
     "userId": "visitor",
     "password": "",
@@ -11,15 +11,23 @@
   },
   "initialHistory": {
     "visitor": [
+      "clear",
       "echo === 联邦航舰【角斗士号】 战术终端 ===",
       "echo 登入接口：UUC-GLADIATOR / Mission Node-Callisto",
       "echo 状态：在线 ▪ 访问级别：未授权访客",
-      "echo ----------------------------------",
-      "echo 警告：任务简报、行动指令与个人档案均属机密",
-      "echo 仅限角斗士号现役舰员存取",
+      "echo ---------------------------------------------",
+      "echo ░▒▓⚠️  警告：本系统受 UUC 战术网监控与加密保护  ⚠️▓▒░",
+      "echo ░▒▓ 所有指令、档案、通讯记录均属 Omega-3 级机密  ▓▒░",
+      "echo ░▒▓ 未经许可访问将触发自动封锁与汇报协议        ▓▒░",
+      "echo ---------------------------------------------",
       "echo ",
-      "echo 输入 login [user]@[password] 以验证身份",
-      "echo ----------------------------------"
+      "echo 输入 login [user]:[password] 以验证身份",
+      "echo 例如：login martin:snowriver",
+      "echo ",
+      "echo ---------------------------------------------",
+      "echo 提示：输入 help 可查看指令列表",
+      "echo ",
+      "echo © 2145  UUC Tactical Command / Callisto Fleet"
     ]
   }
 }
