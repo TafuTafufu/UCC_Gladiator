@@ -33,17 +33,5 @@
     "userId": "damien",
     "password": "takeearthback",
     "userName": "达米恩·冈恩 / 炮手&安保"
-  },
-  
-    {
-        "userId": "8A73B5",
-        "password": "trustno1",
-        "userName": "Mulder, Fox"
-    },
-
-    {
-        "userId": "admin",
-        "password": "admin",
-        "userName": "root"
-    }
+  }
 ]
