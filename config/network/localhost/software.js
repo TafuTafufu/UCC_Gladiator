@@ -51,5 +51,6 @@ function ACKNOWLEDGE() {
   };
 }
 
-/* 关键一步：把命令暴露到全局，让终端解析器能找到它 */
+/* 同时注册大小写两种，以兼容命令解析器的小写化 */
 window.ACKNOWLEDGE = ACKNOWLEDGE;
+window.acknowledge = ACKNOWLEDGE;
