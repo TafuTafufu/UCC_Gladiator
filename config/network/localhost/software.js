@@ -325,10 +325,18 @@ function ACKNOWLEDGE() {
   };
 }
 
-/* =========================
-   把命令暴露给终端
-   ========================= 
+// 这三块是我们之前写的——人物卡库、权限判断、渲染
+// const crewProfiles = { martin: {...}, lola: {...}, ... }
+// function canViewProfile(requester, target) { ... }
+// function renderProfileData(target) { ... }
+
+// 暴露给全局（kernel.js 的 system.crew 会用到）
+window.crewProfiles = crewProfiles;
+window.canViewProfile = canViewProfile;
+window.renderProfileData = renderProfileData;
+
+// 同时把三个命令暴露成可调用程序（给 software.json / kernel.runSoftware 用）
 window.status = status;
 window.profile = profile;
 window.ACKNOWLEDGE = ACKNOWLEDGE;
-window.acknowledge = ACKNOWLEDGE;*/
+window.acknowledge = ACKNOWLEDGE;
