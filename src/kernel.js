@@ -1,4 +1,7 @@
+// =====================
 // Global scope variables
+// =====================
+
 const defaultServerAddress = "localhost";
 let serverDatabase = {};
 let userDatabase = {};
@@ -7,6 +10,11 @@ let mailList = [];
 let cmdLine_;
 let output_;
 let serverDate = { day: "", month: "", year: "", reference: "" };
+
+// 我们自己缓存一个“当前登录用户名”，给 crew/ACKNOWLEDGE 等命令用
+// 注意：login() 时我们会同步 localStorage.loggedUser
+let currentLoggedUserId = "visitor"; // <<< 新增
+
 
 function initDateObject() {
     const date = new Date();
@@ -17,47 +25,47 @@ function initDateObject() {
     serverDate = { day, month, year, reference };
 }
 
-function debugObject( obj ) {
-    for ( const property in obj ) {
-        console.log( `${ property }: ${ JSON.stringify( obj[ property ] ) }` );
-        output( `${ property }: ${ JSON.stringify( obj[ property ] ) }` );
+function debugObject(obj) {
+    for (const property in obj) {
+        console.log(`${property}: ${JSON.stringify(obj[property])}`);
+        output(`${property}: ${JSON.stringify(obj[property])}`);
     }
 }
 
 function setHeader(msg) {
-    // 设置 prompt 显示，比如 [UNREGISTERED TERMINAL USER@UUC-GLD] #
+    // prompt显示形如 [萝拉·沃伊特 / 驾驶员&虚拟造梦者@UUC-GLD] #
     const promptText = `[${ userDatabase.userName }@${ serverDatabase.terminalID }] # `;
 
-    // 组日期、图标等头部信息
+    // 顶部终端抬头
     initDateObject();
-    const dateStr = `${ serverDate.day }/${ serverDate.month }/${ serverDate.year }`;
-    const imgUrl = `config/network/${ serverDatabase.serverAddress }/${ serverDatabase.iconName }`;
+    const dateStr = `${serverDate.day}/${serverDate.month}/${serverDate.year}`;
+    const imgUrl = `config/network/${serverDatabase.serverAddress}/${serverDatabase.iconName}`;
     const imgSize = serverDatabase.iconSize || 100;
     const header = `
-    <img src="${ imgUrl }" width="${ imgSize }" height="${ imgSize }"
-         style="float: left; padding-right: 10px" class="${ serverDatabase.iconClass || "" }">
-    <h2 style="letter-spacing: 4px">${ serverDatabase.serverName }</h2>
-    <p>Logged in: ${ serverDatabase.serverAddress } (&nbsp;${ dateStr }&nbsp;) </p>
-    ${ serverDatabase.headerExtraHTML || "" }
+    <img src="${imgUrl}" width="${imgSize}" height="${imgSize}"
+         style="float: left; padding-right: 10px" class="${serverDatabase.iconClass || ""}">
+    <h2 style="letter-spacing: 4px">${serverDatabase.serverName}</h2>
+    <p>Logged in: ${serverDatabase.serverAddress} (&nbsp;${dateStr}&nbsp;)</p>
+    ${serverDatabase.headerExtraHTML || ""}
     <p>Enter "help" for more information.</p>
     `;
 
-    // 清屏 & 清输入框
+    // 清屏
     output_.innerHTML = "";
     cmdLine_.value = "";
 
-    // 载入浏览器里存过的历史（原本就有的逻辑）
+    // 加载初始历史（manifest.json 里的 initialHistory）
     if (term) {
         term.loadHistoryFromLocalStorage(serverDatabase.initialHistory);
     }
 
-    // 我们要一次性输出到终端的所有内容
+    // 准备一次性批量输出的行
     const linesToPrint = [];
 
-    // 1. 顶部 header
+    // 1. 标头
     linesToPrint.push(header);
 
-    // 2. 你的开场警告 / 舰桥广播（来自 manifest.json -> initialHistory -> 当前用户的 userId）
+    // 2. 这个用户专属的“接入公告/舰桥广播”
     if (
         serverDatabase.initialHistory &&
         userDatabase &&
@@ -71,29 +79,27 @@ function setHeader(msg) {
         });
     }
 
-    // 3. 比如 "Connection successful" 或 "Login successful"
+    // 3. 例如 “Connection successful” 或 “Login successful”
     if (msg) {
         linesToPrint.push(msg);
     }
 
-    // 打印到终端 + 应用那些特效（glitch, glow, etc）
+    // 打印输出 & 应用特效
     output(linesToPrint).then(() => applySFX());
 
-    // 最后更新一下提示符左边那段 [xxx@xxx] #
+    // 更新提示符
     $(".prompt").html(promptText);
 }
 
 /**
  * Cross-browser impl to get document's height.
- *
- * This function is necessary to auto-scroll to the end of page after each terminal command.
  */
 function getDocHeight_() {
     const doc = document;
     return Math.max(
-        Math.max( doc.body.scrollHeight, doc.documentElement.scrollHeight ),
-        Math.max( doc.body.offsetHeight, doc.documentElement.offsetHeight ),
-        Math.max( doc.body.clientHeight, doc.documentElement.clientHeight )
+        Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight),
+        Math.max(doc.body.offsetHeight, doc.documentElement.offsetHeight),
+        Math.max(doc.body.clientHeight, doc.documentElement.clientHeight)
     );
 }
 
@@ -101,85 +107,76 @@ function getDocHeight_() {
  * Scroll to bottom and clear the input value for a new line.
  */
 function newLine() {
-    window.scrollTo( 0, getDocHeight_() );
+    window.scrollTo(0, getDocHeight_());
     cmdLine_.value = ""; // Clear/setup line for next input.
 }
 
 /**
  * Display content as terminal output.
- *
- * @param {String} data The string to be returned as a print in terminal
- * @param {Array} data The array to be returned as a print in terminal
  */
-function output( data ) {
-    return new Promise( ( resolve ) => {
+function output(data) {
+    return new Promise((resolve) => {
         let delayed = 0;
 
-        if ( data && data.constructor === Object ) {
+        if (data && data.constructor === Object) {
             delayed = data.delayed;
             data = data.text;
         }
 
-        if ( data && data.constructor === Array ) {
-            if ( delayed && data.length > 0 ) {
-                outputLinesWithDelay( data, delayed, () => resolve( newLine() ) );
+        if (data && data.constructor === Array) {
+            if (delayed && data.length > 0) {
+                outputLinesWithDelay(data, delayed, () => resolve(newLine()));
                 return;
             }
-            $.each( data, ( _, value ) => {
-                printLine( value );
-            } );
-        } else if ( data ) {
-            printLine( data );
+            $.each(data, (_, value) => {
+                printLine(value);
+            });
+        } else if (data) {
+            printLine(data);
         }
-        resolve( newLine() );
-    } );
+        resolve(newLine());
+    });
 }
 
 /**
  * Print lines of content with some delay between them.
- *
- * @param {Array} lines list of content to display
- * @param {Number} delayed delay in milliseconds between which to display lines
  */
-function outputLinesWithDelay( lines, delayed, resolve ) {
+function outputLinesWithDelay(lines, delayed, resolve) {
     const line = lines.shift();
-    printLine( line );
-    if ( lines.length > 0 ) {
-        setTimeout( outputLinesWithDelay, delayed, lines, delayed, resolve );
-    } else if ( resolve ) {
+    printLine(line);
+    if (lines.length > 0) {
+        setTimeout(outputLinesWithDelay, delayed, lines, delayed, resolve);
+    } else if (resolve) {
         resolve();
     }
 }
 
 /**
  * Display some text, or an image, on a new line.
- *
- * @param {String} data text to display
- * @param {Object} data information on what to display
  */
-function printLine( data ) {
+function printLine(data) {
     data ||= "";
-    if ( !data.startsWith( "<" ) ) {
-        data = `<p>${ data }</p>`;
+    if (!data.startsWith("<")) {
+        data = `<p>${data}</p>`;
     }
-    output_.insertAdjacentHTML( "beforeEnd", data );
+    output_.insertAdjacentHTML("beforeEnd", data);
     applySFX();
 }
 
 function applySFX() {
-    $( output_ ).find( ".desync" ).each( ( _, elem ) => {
+    $(output_).find(".desync").each((_, elem) => {
         const text = elem.textContent.trim();
-        if ( text ) {
+        if (text) {
             elem.dataset.text = text;
         }
-    } );
-    $( output_ ).find( "img.glitch" ).filter( once ).each( ( _, img ) => glitchImage( img ) );
-    $( output_ ).find( "img.particle" ).filter( once ).each( ( _, img ) => particleImage( img ) );
-    $( output_ ).find( ".hack-reveal" ).filter( once ).each( ( _, elem ) => hackRevealText( elem, elem.dataset ) );
+    });
+    $(output_).find("img.glitch").filter(once).each((_, img) => glitchImage(img));
+    $(output_).find("img.particle").filter(once).each((_, img) => particleImage(img));
+    $(output_).find(".hack-reveal").filter(once).each((_, elem) => hackRevealText(elem, elem.dataset));
 }
 
-function once( _, elem ) {
-    if ( elem.dataset.marked ) {
+function once(_, elem) {
+    if (elem.dataset.marked) {
         return false;
     }
     elem.dataset.marked = true;
@@ -187,210 +184,217 @@ function once( _, elem ) {
 }
 
 /**
- * The Kernel will handle all software (system calls).
- *
- * The app name will be checked first if it exists as a system 'native' command.
- * If it doesn't, it will look for a custom software defined at software.json.
- *
- * You can define commands with filetypes by naming the function as command_type.
- * The kernel will handle every `.` as a `_` when looking for the correct software.
- * i.e. the `bar_exe` function needs to be called as the `bar.exe` command in the Terminal.
- *
- * @param {String} app The app name
- * @param {Array} args A list of Strings as args
+ * ============================
+ * Kernel: main command router
+ * ============================
  */
-function kernel( appName, args ) {
-    const program = allowedSoftwares()[ appName ];
-    if ( program ) {
-        return software( appName, program, args );
+function kernel(appName, args) {
+    const program = allowedSoftwares()[appName];
+    if (program) {
+        return software(appName, program, args);
     }
-    const systemApp = system[ appName ] || system[ appName.replace( ".", "_" ) ];
-    const appDisabled = ( program === null );
-    if ( !systemApp || appDisabled ) {
-        return Promise.reject( new CommandNotFoundError( appName ) );
+    const systemApp = system[appName] || system[appName.replace(".", "_")];
+    const appDisabled = (program === null);
+    if (!systemApp || appDisabled) {
+        return Promise.reject(new CommandNotFoundError(appName));
     }
-    return systemApp( args );
+    return systemApp(args);
 }
 
 /**
  * Attempts to connect to a server.
- * If successful, sets global variables serverDatabase / userDatabase / userList / mailList
+ * Loads manifest.json / userlist.json / mailserver.json
+ * and sets serverDatabase / userDatabase / userList / mailList.
  */
-kernel.connectToServer = function connectToServer( serverAddress, userName, passwd ) {
-    return new Promise( ( resolve, reject ) => {
-        if ( serverAddress === serverDatabase.serverAddress ) {
-            reject( new AlreadyOnServerError( serverAddress ) );
+kernel.connectToServer = function connectToServer(serverAddress, userName, passwd) {
+    return new Promise((resolve, reject) => {
+        if (serverAddress === serverDatabase.serverAddress) {
+            reject(new AlreadyOnServerError(serverAddress));
             return;
         }
-        $.get( `config/network/${ serverAddress }/manifest.json`, ( serverInfo ) => {
-            if ( !userName && serverInfo.defaultUser ) {
+        $.get(`config/network/${serverAddress}/manifest.json`, (serverInfo) => {
+            if (!userName && serverInfo.defaultUser) {
+                // 未指定账号 → 用默认账号（游客/匿名之类）
                 serverDatabase = serverInfo;
                 userDatabase = serverInfo.defaultUser;
-                $.get( `config/network/${ serverInfo.serverAddress }/userlist.json`, ( users ) => {
+                currentLoggedUserId = userDatabase.userId || "visitor"; // <<< 新增
+                localStorage.setItem("loggedUser", currentLoggedUserId); // <<< 新增
+
+                $.get(`config/network/${serverInfo.serverAddress}/userlist.json`, (users) => {
                     userList = users;
-                } );
-                $.get( `config/network/${ serverInfo.serverAddress }/mailserver.json`, ( mails ) => {
+                });
+                $.get(`config/network/${serverInfo.serverAddress}/mailserver.json`, (mails) => {
                     mailList = mails;
-                } );
-                setHeader( "Connection successful" );
+                });
+
+                setHeader("Connection successful");
                 resolve();
-            } else if ( userName ) {
-                $.get( `config/network/${ serverInfo.serverAddress }/userlist.json`, ( users ) => {
-                    const matchingUser = users.find( ( user ) => user.userId === userName );
-                    if ( !matchingUser ) {
-                        reject( new UnknownUserError( userName ) );
+            } else if (userName) {
+                // 指定了 userName（ssh 或 login 用的）
+                $.get(`config/network/${serverInfo.serverAddress}/userlist.json`, (users) => {
+                    const matchingUser = users.find((user) => user.userId === userName);
+                    if (!matchingUser) {
+                        reject(new UnknownUserError(userName));
                         return;
                     }
-                    if ( matchingUser.password && matchingUser.password !== passwd ) {
-                        reject( new InvalidPasswordError( userName ) );
+                    if (matchingUser.password && matchingUser.password !== passwd) {
+                        reject(new InvalidPasswordError(userName));
                         return;
                     }
                     serverDatabase = serverInfo;
                     userDatabase = matchingUser;
                     userList = users;
-                    $.get( `config/network/${ serverInfo.serverAddress }/mailserver.json`, ( mails ) => {
+                    currentLoggedUserId = userDatabase.userId || "visitor"; // <<< 新增
+                    localStorage.setItem("loggedUser", currentLoggedUserId); // <<< 新增
+
+                    $.get(`config/network/${serverInfo.serverAddress}/mailserver.json`, (mails) => {
                         mailList = mails;
-                    } );
-                    setHeader( "Connection successful" );
+                    });
+                    setHeader("Connection successful");
                     resolve();
-                } ).fail( () => {
-                    reject( new AddressNotFoundError( serverAddress ) );
-                } );
+                }).fail(() => {
+                    reject(new AddressNotFoundError(serverAddress));
+                });
             } else {
-                reject( new ServerRequireUsernameError( serverAddress ) );
+                reject(new ServerRequireUsernameError(serverAddress));
             }
-        } ).fail( ( ...args ) => {
-            console.error( "[connectToServer] Failure:", args );
-            reject( new AddressNotFoundError( serverAddress ) );
-        } );
-    } );
+        }).fail((...args) => {
+            console.error("[connectToServer] Failure:", args);
+            reject(new AddressNotFoundError(serverAddress));
+        });
+    });
 };
 
 /**
- * This will initialize the kernel function.
- *
- * It will define the help functions, set some important variables and connect the databases.
- *
- * @param {Object} cmdLineContainer The Input.cmdline right of the div.prompt
- * @param {Object} outputContainer The output element inside the div#container
+ * Kernel.init:
+ * - grabs DOM
+ * - loads software.json (custom commands list)
+ * - connects to default server
  */
-kernel.init = function init( cmdLineContainer, outputContainer ) {
-    return new Promise( ( resolve, reject ) => {
-        cmdLine_ = document.querySelector( cmdLineContainer );
-        output_ = document.querySelector( outputContainer );
+kernel.init = function init(cmdLineContainer, outputContainer) {
+    return new Promise((resolve, reject) => {
+        cmdLine_ = document.querySelector(cmdLineContainer);
+        output_ = document.querySelector(outputContainer);
 
         $.when(
-            $.get( "config/software.json", ( softwareData ) => {
-                softwareInfo = softwareData;
-                kernel.connectToServer( defaultServerAddress );
-            } )
+            $.get("config/software.json", (softwareData) => {
+                softwareInfo = softwareData; // eslint-disable-line no-undef
+                kernel.connectToServer(defaultServerAddress);
+            })
         )
-            .done( () => {
-                resolve( true );
-            } )
-            .fail( ( err, msg, details ) => {
-                console.error( "[init] Failure:", err, msg, details );
-                reject( new JsonFetchParseError( msg ) );
-            } );
-    } );
+        .done(() => {
+            resolve(true);
+        })
+        .fail((err, msg, details) => {
+            console.error("[init] Failure:", err, msg, details);
+            reject(new JsonFetchParseError(msg));
+        });
+    });
 };
 
+
 /**
- * Internal command functions.
- *
- * This is where the internal commands are located.
- * This should have every non-custom software command functions.
+ * ============================
+ * System = built-in commands
+ * (NOT from software.json, these are native)
+ * ============================
  */
 system = {
     dumpdb() {
-        return new Promise( () => {
-            output( ":: serverDatabase - connected server information" );
-            debugObject( serverDatabase );
-            output( "----------" );
-            output( ":: userDatabase - connected user information" );
-            debugObject( userDatabase );
-            output( "----------" );
-            output( ":: userList - list of users registered in the connected server" );
-            debugObject( userList );
-        } );
+        return new Promise(() => {
+            output(":: serverDatabase - connected server information");
+            debugObject(serverDatabase);
+            output("----------");
+            output(":: userDatabase - connected user information");
+            debugObject(userDatabase);
+            output("----------");
+            output(":: userList - list of users registered in the connected server");
+            debugObject(userList);
+        });
     },
 
     whoami() {
-        return new Promise( ( resolve ) => {
+        return new Promise((resolve) => {
             resolve(
-                `${ serverDatabase.serverAddress }/${ userDatabase.userId }`
+                `${serverDatabase.serverAddress}/${userDatabase.userId}`
             );
-        } );
+        });
     },
 
     clear() {
-        return new Promise( ( resolve ) => {
+        return new Promise((resolve) => {
             setHeader();
-            resolve( false );
-        } );
+            resolve(false);
+        });
     },
 
     date() {
-        return new Promise( ( resolve ) => {
+        return new Promise((resolve) => {
             const date = new Date();
-            const time = `${ date.getHours() }:${ date.getMinutes() }:${ date.getSeconds() }`;
-            resolve( String( `${ serverDate.month } ${ serverDate.day } ${ serverDate.year } ${ time } ${ serverDate.reference }` ) );
-        } );
+            const time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+            resolve(String(`${serverDate.month} ${serverDate.day} ${serverDate.year} ${time} ${serverDate.reference}`));
+        });
     },
 
-    echo( args ) {
-        return new Promise( ( resolve ) => {
-            resolve( args.join( " " ) );
-        } );
+    echo(args) {
+        return new Promise((resolve) => {
+            resolve(args.join(" "));
+        });
     },
 
-    help( args ) {
-        return new Promise( ( resolve ) => {
+    help(args) {
+        return new Promise((resolve) => {
             const programs = allowedSoftwares();
-            if ( args.length === 0 ) {
-                const cmdNames = Object.keys( system ).filter(
-                    ( cmd ) => {
-                        const program = programs[ cmd ];
-                        return program !== null && !( program && program.secretCommand ) && cmd !== "dumpdb"; // hidden system command
+            if (args.length === 0) {
+                const cmdNames = Object.keys(system).filter(
+                    (cmd) => {
+                        const program = programs[cmd];
+                        return program !== null && !(program && program.secretCommand) && cmd !== "dumpdb";
                     }
                 );
-                const progNames = Object.keys( programs ).filter(
-                    ( pName ) => programs[ pName ] && !programs[ pName ].secretCommand
+                const progNames = Object.keys(programs).filter(
+                    (pName) => programs[pName] && !programs[pName].secretCommand
                 );
-                Array.prototype.push.apply( cmdNames, progNames );
+                Array.prototype.push.apply(cmdNames, progNames);
+
+                // 我们也想把 'crew' 显示出来（如果我们加了 crew）
+                if (!cmdNames.includes("crew")) {
+                    cmdNames.push("crew"); // <<< 新增: crew 指令出现在 help 列表
+                }
+
                 cmdNames.sort();
-                resolve( [
+                resolve([
                     "You can read the help of a specific command by entering as follows: 'help commandName'",
                     "List of useful commands:",
-                    `<div class="ls-files">${ cmdNames.join( "<br>" ) }</div>`,
+                    `<div class="ls-files">${cmdNames.join("<br>")}</div>`,
                     "You can navigate in the commands usage history using the UP & DOWN arrow keys.",
                     "The TAB key will provide command auto-completion."
-                ] );
-            } else if ( args[ 0 ] === "clear" ) {
-                resolve( [ "Usage:", "> clear", "The clear command will wipe the content of the terminal, but it will not affect the history." ] );
-            } else if ( args[ 0 ] === "date" ) {
-                resolve( [ "Usage:", "> date", "The date command will print the current date-time into terminal." ] );
-            } else if ( args[ 0 ] === "echo" ) {
-                resolve( [ "Usage:", "> echo args", "The echo command will print args into terminal." ] );
-            } else if ( args[ 0 ] === "help" ) {
-                resolve( [ "Usage:", "> help", "The default help message. It will show the commands available on the server." ] );
-            } else if ( args[ 0 ] === "history" ) {
-                resolve( [ "Usage:", "> history", "The history command will list all the commands you alread typed in this terminal." ] );
-            } else if ( args[ 0 ] === "login" ) {
-                resolve( [ "Usage:", "> login username:password", "Switch account: log in as another registered user on the server, to access your data files and messages." ] );
-            } else if ( args[ 0 ] === "mail" ) {
-                resolve( [ "Usage:", "> mail", "If you're logged in you can list your mail messages if any." ] );
-            } else if ( args[ 0 ] === "ping" ) {
-                resolve( [
+                ]);
+            } else if (args[0] === "clear") {
+                resolve(["Usage:", "> clear", "The clear command will wipe the content of the terminal, but it will not affect the history."]);
+            } else if (args[0] === "date") {
+                resolve(["Usage:", "> date", "The date command will print the current date-time into terminal."]);
+            } else if (args[0] === "echo") {
+                resolve(["Usage:", "> echo args", "The echo command will print args into terminal."]);
+            } else if (args[0] === "help") {
+                resolve(["Usage:", "> help", "The default help message. It will show the commands available on the server."]);
+            } else if (args[0] === "history") {
+                resolve(["Usage:", "> history", "The history command will list all the commands you already typed in this terminal."]);
+            } else if (args[0] === "login") {
+                resolve(["Usage:", "> login username:password", "Switch account: log in as another registered user on the server, to access your data files and messages."]);
+            } else if (args[0] === "mail") {
+                resolve(["Usage:", "> mail", "If you're logged in you can list your mail messages if any."]);
+            } else if (args[0] === "ping") {
+                resolve([
                     "Usage:",
                     "> ping address",
                     "The ping command will try to reach a valid address.",
                     "If the ping doesn't return a valid response, the address may be incorrect, may not exist or can't be reached locally."
-                ] );
-            } else if ( args[ 0 ] === "read" ) {
-                resolve( [ "Usage:", "> read x", "If you're logged in you can read your mail messages if any." ] );
-            } else if ( args[ 0 ] === "ssh" ) {
-                resolve( [
+                ]);
+            } else if (args[0] === "read") {
+                resolve(["Usage:", "> read x", "If you're logged in you can read your mail messages if any."]);
+            } else if (args[0] === "ssh") {
+                resolve([
                     "Usage:",
                     "> ssh address",
                     "> ssh username@address",
@@ -398,262 +402,341 @@ system = {
                     "You can connect to a valid address to access a specific server on the Internet.",
                     "You may need to specify a username if the server has no default user.",
                     "You may need to specify a password if the user account is protected."
-                ] );
-            } else if ( args[ 0 ] === "whoami" ) {
-                resolve( [ "Usage:", "> whoami", "Display the server you are currently connected to, and the login you are registered with." ] );
-            } else if ( args[ 0 ] in softwareInfo ) {
-                const customProgram = programs[ args[ 0 ] ];
-                if ( customProgram.help ) {
-                    resolve( [ "Usage:", `> ${ args[ 0 ] }`, customProgram.help ] );
+                ]);
+            } else if (args[0] === "whoami") {
+                resolve(["Usage:", "> whoami", "Display the server you are currently connected to, and the login you are registered with."]);
+            } else if (args[0] === "crew") { // <<< 新增
+                resolve([
+                    "Usage:",
+                    "> crew",
+                    "> crew <index>",
+                    "crew 会列出你在本节点上有权限查看的舰员档案。",
+                    "crew <index> 会展开该档案，包含随身装备、心理记录（如果你有权限看）。"
+                ]);
+            } else if (args[0] in softwareInfo) {
+                const customProgram = programs[args[0]];
+                if (customProgram.help) {
+                    resolve(["Usage:", `> ${args[0]}`, customProgram.help]);
                 }
-            } else if ( args[ 0 ] in system && args[ 0 ] !== "dumpdb" ) {
-                console.error( `Missing help message for system command: ${ args[ 0 ] }` );
+            } else if (args[0] in system && args[0] !== "dumpdb") {
+                console.error(`Missing help message for system command: ${args[0]}`);
             } else {
-                resolve( [ `Unknow command ${ args[ 0 ] }` ] );
+                resolve([`Unknow command ${args[0]}`]);
             }
-        } );
+        });
     },
 
-    login( args ) {
-        return new Promise( ( resolve, reject ) => {
-            if ( !args ) {
-                reject( new UsernameIsEmptyError() );
+    login(args) {
+        return new Promise((resolve, reject) => {
+            if (!args) {
+                reject(new UsernameIsEmptyError());
                 return;
             }
             let userName = "";
             let passwd = "";
             try {
-                [ userName, passwd ] = userPasswordFrom( args[ 0 ] );
-            } catch ( error ) {
-                reject( error );
+                [userName, passwd] = userPasswordFrom(args[0]);
+            } catch (error) {
+                reject(error);
                 return;
             }
-            if ( !userName ) {
-                reject( new UsernameIsEmptyError() );
+            if (!userName) {
+                reject(new UsernameIsEmptyError());
                 return;
             }
-            const matchingUser = userList.find( ( user ) => user.userId === userName );
-            if ( !matchingUser ) {
-                reject( new UnknownUserError( userName ) );
+            const matchingUser = userList.find((user) => user.userId === userName);
+            if (!matchingUser) {
+                reject(new UnknownUserError(userName));
                 return;
             }
-            if ( matchingUser.password && matchingUser.password !== passwd ) {
-                reject( new InvalidPasswordError( userName ) );
+            if (matchingUser.password && matchingUser.password !== passwd) {
+                reject(new InvalidPasswordError(userName));
                 return;
             }
             userDatabase = matchingUser;
-            setHeader( "Login successful" );
+
+            // 同步“谁现在登录了”，给 ACKNOWLEDGE / profile / crew 用
+            currentLoggedUserId = userDatabase.userId || "visitor";   // <<< 新增
+            localStorage.setItem("loggedUser", currentLoggedUserId);  // <<< 新增
+
+            setHeader("Login successful");
             resolve();
-        } );
+        });
     },
 
     logout() {
-        return new Promise( () => {
+        return new Promise(() => {
             location.reload();
-        } );
+        });
     },
 
     exit() {
-        return new Promise( () => {
+        return new Promise(() => {
             location.reload();
-        } );
+        });
     },
 
     history() {
-        return new Promise( ( resolve ) => {
-            const messageList = history_.map( ( line, i ) => `[${ i }] ${ line }` ); // eslint-disable-line no-undef
-            resolve( messageList );
-        } );
+        return new Promise((resolve) => {
+            const messageList = history_.map((line, i) => `[${i}] ${line}`); // eslint-disable-line no-undef
+            resolve(messageList);
+        });
     },
 
     mail() {
-        return new Promise( ( resolve, reject ) => {
-            const messageList = mailList.filter( ( mail ) => mail.to.includes( userDatabase.userId ) )
-                .map( ( mail, i ) => `[${ i }] ${ mail.title }` );
-            if ( messageList.length === 0 ) {
-                reject( new MailServerIsEmptyError() );
+        return new Promise((resolve, reject) => {
+            const messageList = mailList
+                .filter((mail) => mail.to.includes(userDatabase.userId))
+                .map((mail, i) => `[${i}] ${mail.title}`);
+            if (messageList.length === 0) {
+                reject(new MailServerIsEmptyError());
                 return;
             }
-            resolve( messageList );
-        } );
+            resolve(messageList);
+        });
     },
 
-    read( args ) {
-        return new Promise( ( resolve, reject ) => {
-            const mailIndex = Number( args[ 0 ] );
-            const messageList = mailList.filter( (mail) => mail.to.includes( userDatabase.userId ) );
-            const mailAtIndex = messageList[ mailIndex ];
-            if ( !mailAtIndex || !mailAtIndex.to.includes( userDatabase.userId ) ) {
-                reject( new InvalidMessageKeyError() );
+    read(args) {
+        return new Promise((resolve, reject) => {
+            const mailIndex = Number(args[0]);
+            const messageList = mailList.filter((mail) => mail.to.includes(userDatabase.userId));
+            const mailAtIndex = messageList[mailIndex];
+            if (!mailAtIndex || !mailAtIndex.to.includes(userDatabase.userId)) {
+                reject(new InvalidMessageKeyError());
                 return;
             }
             let message = [];
-            message.push( "---------------------------------------------" );
-            message.push( `From: ${ mailAtIndex.from }` );
-            message.push( `To: ${ userDatabase.userId }@${ serverDatabase.terminalID }` );
-            message.push( "---------------------------------------------" );
-            message = [ ...message, ...mailAtIndex.body.split( "  " ) ];
-            resolve( message );
-        } );
+            message.push("---------------------------------------------");
+            message.push(`From: ${mailAtIndex.from}`);
+            message.push(`To: ${userDatabase.userId}@${serverDatabase.terminalID}`);
+            message.push("---------------------------------------------");
+            message = [...message, ...mailAtIndex.body.split("  ")];
+            resolve(message);
+        });
     },
 
-    ping( args ) {
-        return new Promise( ( resolve, reject ) => {
-            if ( args === "" ) {
-                reject( new AddressIsEmptyError() );
+    // ============================
+    // crew：像 mail 一样浏览船员档案
+    // ============================
+    crew(args) { // <<< 新增
+        return new Promise((resolve, reject) => {
+            // 我们假设 crewProfiles / canViewProfile / renderProfileData
+            // 已经在全局可访问（例如在 config/software.js 里挂到了 window）
+            if (!window.crewProfiles || !window.canViewProfile || !window.renderProfileData) {
+                reject(new Error("crew database not available on this node"));
                 return;
             }
 
-            $.get( `config/network/${ args }/manifest.json`, ( serverInfo ) => {
-                resolve( `Server ${ serverInfo.serverAddress } (${ serverInfo.serverName }) can be reached` );
-            } )
-                .fail( () => reject( new AddressNotFoundError( args ) ) );
-        } );
+            const requester = currentLoggedUserId || "visitor";
+
+            // 如果没带参数：列出我能看的所有档案，像 mail 那样列成 [0] [1] [2]...
+            if (!args || args.length === 0) {
+                const visibleKeys = Object.keys(window.crewProfiles).filter((targetId) => {
+                    return window.canViewProfile(requester, targetId);
+                });
+
+                if (visibleKeys.length === 0) {
+                    resolve([
+                        "No accessible crew records.",
+                        "(Either you are not authorized, or this node has restricted medical / command data.)"
+                    ]);
+                    return;
+                }
+
+                const listing = visibleKeys.map((id, i) => {
+                    // 简单生成“摘要行”用来浏览
+                    const summaryLine = window.crewProfiles[id].summary?.[0] || id;
+                    return `[${i}] ${summaryLine}`;
+                });
+
+                resolve([
+                    "<p class='glow' style='font-size:1.1rem'>[CREW ROSTER ACCESS / Ω-3 CHANNEL]</p>",
+                    ...listing,
+                    "",
+                    "Use 'crew <index>' to inspect a profile."
+                ]);
+
+                return;
+            }
+
+            // 如果有参数，比如 crew 1：尝试展开对应索引
+            const chosenIndex = Number(args[0]);
+            if (Number.isNaN(chosenIndex)) {
+                reject(new Error("Invalid crew index."));
+                return;
+            }
+
+            const visibleKeys = Object.keys(window.crewProfiles).filter((targetId) => {
+                return window.canViewProfile(requester, targetId);
+            });
+
+            const targetId = visibleKeys[chosenIndex];
+            if (!targetId) {
+                reject(new Error("Invalid crew index or insufficient clearance."));
+                return;
+            }
+
+            const fullProfileLines = window.renderProfileData(targetId);
+            resolve(fullProfileLines);
+        });
+    },
+
+    ping(args) {
+        return new Promise((resolve, reject) => {
+            if (args === "") {
+                reject(new AddressIsEmptyError());
+                return;
+            }
+
+            $.get(`config/network/${args}/manifest.json`, (serverInfo) => {
+                resolve(`Server ${serverInfo.serverAddress} (${serverInfo.serverName}) can be reached`);
+            })
+                .fail(() => reject(new AddressNotFoundError(args)));
+        });
     },
 
     telnet() {
-        return new Promise( ( _, reject ) => {
-            reject( new Error( "telnet is unsecure and is deprecated - use ssh instead" ) );
-        } );
+        return new Promise((_, reject) => {
+            reject(new Error("telnet is unsecure and is deprecated - use ssh instead"));
+        });
     },
 
-    ssh( args ) {
-        return new Promise( ( resolve, reject ) => {
-            if ( args === "" ) {
-                reject( new AddressIsEmptyError() );
+    ssh(args) {
+        return new Promise((resolve, reject) => {
+            if (args === "") {
+                reject(new AddressIsEmptyError());
                 return;
             }
             let userName = "";
             let passwd = "";
-            let serverAddress = args[ 0 ];
-            if ( serverAddress.includes( "@" ) ) {
-                const splitted = serverAddress.split( "@" );
-                if ( splitted.length !== 2 ) {
-                    reject( new InvalidCommandParameter( "ssh" ) );
+            let serverAddress = args[0];
+            if (serverAddress.includes("@")) {
+                const splitted = serverAddress.split("@");
+                if (splitted.length !== 2) {
+                    reject(new InvalidCommandParameter("ssh"));
                     return;
                 }
-                serverAddress = splitted[ 1 ];
+                serverAddress = splitted[1];
                 try {
-                    [ userName, passwd ] = userPasswordFrom( splitted[ 0 ] );
-                } catch ( error ) {
-                    reject( error );
+                    [userName, passwd] = userPasswordFrom(splitted[0]);
+                } catch (error) {
+                    reject(error);
                     return;
                 }
             }
-            kernel.connectToServer( serverAddress, userName, passwd ).then( resolve ).catch( reject );
-        } );
+            kernel.connectToServer(serverAddress, userName, passwd).then(resolve).catch(reject);
+        });
     }
 };
 
-function userPasswordFrom( creds ) {
-    if ( !creds.includes( ":" ) ) {
-        return [ creds, "" ];
+
+// ============================
+// helpers
+// ============================
+
+function userPasswordFrom(creds) {
+    if (!creds.includes(":")) {
+        return [creds, ""];
     }
-    const splitted = creds.split( ":" );
-    if ( splitted.length !== 2 ) {
+    const splitted = creds.split(":");
+    if (splitted.length !== 2) {
         throw new InvalidCredsSyntaxError();
     }
     return splitted;
 }
 
 /**
- * The custom software caller.
- *
- * This will look for custom softwares from `software.json`.
- *
- * @param {String} progName The software name
- * @param {String} args Args to be handled if any
+ * custom software caller
+ * (commands coming from software.json)
  */
-function software( progName, program, args ) {
-    return new Promise( ( resolve, reject ) => {
-        if ( program ) {
-            if ( program.clear ) {
-                system.clear().then( runSoftware( progName, program, args ).then( resolve, reject ) );
+function software(progName, program, args) {
+    return new Promise((resolve, reject) => {
+        if (program) {
+            if (program.clear) {
+                system.clear().then(
+                    runSoftware(progName, program, args).then(resolve, reject)
+                );
             } else {
-                runSoftware( progName, program, args ).then( resolve, reject );
+                runSoftware(progName, program, args).then(resolve, reject);
             }
         } else {
-            reject( new CommandNotFoundError( progName ) );
+            reject(new CommandNotFoundError(progName));
         }
-    } );
+    });
 }
 
 /**
- * Run the specified program
- *
- * @param {String} progName The software name
- * @param {Object} program Command definition from sofwtare.json
- * @param {String} args Args to be handled if any
+ * run custom program:
+ * - if program.message exists in software.json, just print that
+ * - else call window[progName](args)
  */
-function runSoftware( progName, program, args ) {
-    return new Promise( ( resolve ) => {
+function runSoftware(progName, program, args) {
+    return new Promise((resolve) => {
         let msg;
-        if ( program.message ) {
+        if (program.message) {
             msg = { text: program.message, delayed: program.delayed };
         } else {
-            msg = window[ progName ]( args ) || "";
-            if ( msg.constructor === Object ) {
-                if ( !msg.onInput ) {
-                    throw new Error( "An onInput callback must be defined!" );
+            msg = window[progName](args) || "";
+            if (msg.constructor === Object) {
+                if (!msg.onInput) {
+                    throw new Error("An onInput callback must be defined!");
                 }
-                if ( msg.message ) {
-                    output( msg.message );
+                if (msg.message) {
+                    output(msg.message);
                 }
-                readPrompt( msg.prompt || ">" ).then( ( input ) => msg.onInput( input ) )
-                    .then( ( finalMsg ) => resolve( finalMsg ) );
+                readPrompt(msg.prompt || ">").then((input) => msg.onInput(input))
+                    .then((finalMsg) => resolve(finalMsg));
                 return;
             }
         }
-        resolve( msg );
-    } );
+        resolve(msg);
+    });
 }
 
 /**
- * Read user input
- *
- * @param {String} promptText The text prefix to display before the <input> prompt
+ * readPrompt: interactive input capture used by interactive programs
  */
-function readPrompt( promptText ) {
-    return new Promise( ( resolve ) => {
-        const prevPromptText = $( "#input-line .prompt" ).text();
-        $( "#input-line .prompt" ).text( promptText );
+function readPrompt(promptText) {
+    return new Promise((resolve) => {
+        const prevPromptText = $("#input-line .prompt").text();
+        $("#input-line .prompt").text(promptText);
         term.removeCmdLineListeners();
-        cmdLine_.addEventListener( "keydown", promptSubmitted );
-        function promptSubmitted( e ) {
-            if ( e.keyCode === 13 ) {
-                cmdLine_.removeEventListener( "keydown", promptSubmitted );
+        cmdLine_.addEventListener("keydown", promptSubmitted);
+        function promptSubmitted(e) {
+            if (e.keyCode === 13) {
+                cmdLine_.removeEventListener("keydown", promptSubmitted);
                 term.addCmdLineListeners();
-                $( "#input-line .prompt" ).text( prevPromptText );
-                resolve( this.value.trim() );
+                $("#input-line .prompt").text(prevPromptText);
+                resolve(this.value.trim());
             }
         }
-    } );
+    });
 }
 
 /**
- * List only details about programs the current user has access on the current server.
+ * List only programs current user can access
+ * - program.location: 限制在哪个server可见
+ * - program.protection: 限制哪些userId可以跑
  */
 function allowedSoftwares() {
     const softwares = {};
-    for ( const app in softwareInfo ) {
-        const program = softwareInfo[ app ];
-        if ( program === null ) {
-            softwares[ app ] = null;
+    for (const app in softwareInfo) { // eslint-disable-line no-undef
+        const program = softwareInfo[app];
+        if (program === null) {
+            softwares[app] = null;
         } else if (
-            ( !program.location || program.location.includes( serverDatabase.serverAddress ) ) &&
-            ( !program.protection || program.protection.includes( userDatabase.userId ) )
+            (!program.location || program.location.includes(serverDatabase.serverAddress)) &&
+            (!program.protection || program.protection.includes(userDatabase.userId))
         ) {
-            softwares[ app ] = program;
+            softwares[app] = program;
         }
     }
     return softwares;
 }
 
+
 /*
- * Wrapper to easily define sofwtare programs that act as dweets.
- * Reference code: https://github.com/lionleaf/dwitter/blob/master/dwitter/templates/dweet/dweet.html#L250
- * Notable difference with https://dwitter.net : default canvas dimensions are width=200 & height=200
- * There are usage examples in config/software.js
+ * dweet helpers (unchanged)
  */
 const FPS = 60;
 const epsilon = 1.5;
@@ -663,7 +746,7 @@ const S = Math.sin;
 const T = Math.tan;
 
 let lastDweetId = 0;
-function dweet( u, width, height, delay, style ) {
+function dweet(u, width, height, delay, style) {
     width = width || 200;
     height = height || 200;
     delay = delay || 0;
@@ -671,36 +754,36 @@ function dweet( u, width, height, delay, style ) {
     const id = ++lastDweetId;
     let frame = 0;
     let nextFrameMs = 0;
-    function loop( frameTime ) {
+    function loop(frameTime) {
         frameTime = frameTime || 0;
-        const c = document.getElementById( id );
-        if ( !c ) {
-            console.log( `Stopping dweet rendering: no element with id=${ id } found` );
+        const c = document.getElementById(id);
+        if (!c) {
+            console.log(`Stopping dweet rendering: no element with id=${id} found`);
             return;
         }
-        requestAnimationFrame( loop );
-        if ( frameTime < nextFrameMs - epsilon ) {
-            return; // Skip this cycle as we are animating too quickly.
+        requestAnimationFrame(loop);
+        if (frameTime < nextFrameMs - epsilon) {
+            return; // too fast
         }
-        nextFrameMs = Math.max( nextFrameMs + 1000 / FPS, frameTime );
+        nextFrameMs = Math.max(nextFrameMs + 1000 / FPS, frameTime);
         let time = frame / FPS;
-        if ( time * FPS | frame - 1 === 0 ) {
+        if (time * FPS | frame - 1 === 0) {
             time += 0.000001;
         }
         frame++;
-        const x = c.getContext( "2d" );
+        const x = c.getContext("2d");
         x.fillStyle = "white";
         x.strokeStyle = "white";
         x.beginPath();
         x.resetTransform();
-        x.clearRect( 0, 0, width, height ); // clear canvas
-        u( time, x, c );
+        x.clearRect(0, 0, width, height);
+        u(time, x, c);
     }
-    setTimeout( loop, delay + 50 ); // Minimal small delay to let time for the canvas to be inserted
-    return `<canvas id="${ id }" width="${ width }" height="${ height }" style="${ style }">`;
+    setTimeout(loop, delay + 50);
+    return `<canvas id="${id}" width="${width}" height="${height}" style="${style}">`;
 }
 
-function R( r, g, b, a ) {
+function R(r, g, b, a) {
     a = typeof a === "undefined" ? 1 : a;
-    return `rgba(${ r | 0 },${ g | 0 },${ b | 0 },${ a })`;
+    return `rgba(${r | 0},${g | 0},${b | 0},${a})`;
 }
