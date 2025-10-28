@@ -1,53 +1,20 @@
 {
   "demo.exe": {
-    "help": "Demonstrate some rendering features",
-    "clear": true,
-    "message": [
-      "<p class=glow style='font-size: 3em'>⚠ ACHTUNG ⚠</p>",
-      "<p class=desync>SHADY TROUBLING MESSAGE</p>",
-      "<img src=config/network/UUC_Gladiator/tech.jpg style='width: 10rem' class=glitch>",
-      "<p class=shimmer>Zombie ipsum reversus ab viral inferno, nam rick grimes malum cerebro. De carne...</p>",
-      "<p class=hack-reveal data-alphabet=uppercase data-iterations-before-reveal=0 data-preserve-spaces=true>All your base are belong to us</p>",
-      "<img src=hacker.jpg class=particle data-particules=2000>"
-    ]
+    "help": "系统演示程序（保留以确保初始化正常）"
   },
-
   "decrypt": {
-    "help": "ROT13 decode. 用法: decrypt <text>"
+    "help": "ROT13 decode（系统命令保留）"
   },
-
   "identify": {
-    "help": "小测试小游戏"
+    "help": "内部测试程序（保留）"
   },
-
-  "artifact": {
-    "help": "查看特定神器 (artifact <id>)"
-  },
-
   "ACKNOWLEDGE": {
     "help": "确认收到Ω-3级折纸计划指令，并回传殖民联邦加密回执。仅限舰员身份使用。"
-    /* 非常重要：
-       这里【不要】再放 "message":[ ... ].
-       因为如果有 message，kernel 会直接把这段静态文本打印出来，
-       而不会去调用 window.ACKNOWLEDGE()！
-       我们现在就是想让它走 window.ACKNOWLEDGE() 的 JS 逻辑，
-       根据 loggedUser 判断权限。
-    */
   },
-
   "status": {
     "help": "显示角斗士号当前的战术/航行/武装状态"
-    /* 同理，不要放 message:[]，
-       让 kernel 调用 window.status()
-    */
   },
-
   "profile": {
-    "help": "查看个人档案/心理记录。用法：profile 或 profile <名字> (权限限制)"
+    "help": "查看档案与心理记录。用法：profile 或 profile <名字>（需权限）"
   }
-
-  /* 注意：
-     我们不在这个 JSON 里放 crew，
-     因为 crew 是 system.crew()，不是 software.js 的命令。
-  */
 }
