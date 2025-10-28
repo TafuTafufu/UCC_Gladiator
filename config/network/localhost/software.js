@@ -7,19 +7,15 @@
 (function bootstrapCrewUsers() {
   // 舰员清单（和 userlist.json 保持一致）
   const crewUsers = [
-    { userId: "martin",  password: "snowriver",   userName: "马丁·史密斯 / 角斗士号机械师" },
-    { userId: "lola",    password: "virtequal",   userName: "萝拉·沃伊特 / 驾驶员&虚拟造梦者" },
-    { userId: "vincent", password: "lola4ever",   userName: "文森特·戴尔加图 / 情报&黑客" },
-    { userId: "diana",   password: "neverlost",   userName: "戴安娜·埃弗里特 / 医疗官" },
-    { userId: "andrew",  password: "no_meat",     userName: "安德鲁·菲斯克 / 外交官" },
+    { userId: "martin",  password: "snowriver",     userName: "马丁·史密斯 / 角斗士号机械师" },
+    { userId: "lola",    password: "virtequal",     userName: "萝拉·沃伊特 / 驾驶员&虚拟造梦者" },
+    { userId: "vincent", password: "lola4ever",     userName: "文森特·戴尔加图 / 情报&黑客" },
+    { userId: "diana",   password: "neverlost",     userName: "戴安娜·埃弗里特 / 医疗官" },
+    { userId: "andrew",  password: "no_meat",       userName: "安德鲁·菲斯克 / 外交官" },
     { userId: "damien",  password: "takeearthback", userName: "达米恩·冈恩 / 炮手&安保" }
   ];
 
-  // 目标：让 login username:password 能识别这些人。
-  // 我们不知道终端最终是从哪个 key 拿“已注册用户列表”，
-  // 但我们可以写入一组常用 key（login 通常会检查其中之一）。
-  // 这段代码会在页面加载时运行，对所有玩家生效。
-
+  // 把这些账号塞到本地存储里，假装“这是服务器已有的注册用户”
   const possibleKeys = [
     'UUC_Gladiator_users',
     'UUC_Gladiator_userlist',
@@ -39,9 +35,8 @@
   }
 })();
 
-/* 可选：定义/覆盖 ACKNOWLEDGE 命令，让玩家能发回执 */
+/* 定义 ACKNOWLEDGE 命令：用于回传折纸指令的回执 */
 function ACKNOWLEDGE() {
-  // 这个函数名对应命令行里的 ACKNOWLEDGE
   return {
     delayed: 50,
     clear: false,
@@ -55,3 +50,6 @@ function ACKNOWLEDGE() {
     ]
   };
 }
+
+/* 关键一步：把命令暴露到全局，让终端解析器能找到它 */
+window.ACKNOWLEDGE = ACKNOWLEDGE;
