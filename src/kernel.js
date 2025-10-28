@@ -645,61 +645,50 @@ function userPasswordFrom(creds) {
     return splitted;
 }
 
-/**
- * custom software caller
- * (commands coming from software.json)
- */
-function software(progName, program, args) {
-    return new Promise((resolve, reject) => {
-        if (program) {
-            if (program.clear) {
-                system.clear().then(
-                    runSoftware(progName, program, args).then(resolve, reject)
-                );
-            } else {
-                runSoftware(progName, program, args).then(resolve, reject);
-            }
-        } else {
-            reject(new CommandNotFoundError(progName));
-        }
-    });
-}
-
-/**
- * run custom program:
- * - if program.message exists in software.json, just print that
- * - else call window[progName](args)
- */
 function runSoftware(progName, program, args) {
     return new Promise((resolve) => {
         let msg;
         if (program.message) {
+            // 如果 software.json 里这个命令写了固定 message，就用那个静态文本
             msg = { text: program.message, delayed: program.delayed };
         } else {
+            // 否则调用真正的实现函数，比如 window.status / window.profile / window.acknowledge
             msg = window[progName](args) || "";
-       if (msg && msg.constructor === Object) {
-
-    // 1) 如果这个返回值根本不是交互式（没有 onInput），
-    //    我们就把它当成普通打印，然后 resolve 掉。
-    if (!msg.onInput) {
-        // 常规 one-shot 命令（status / profile / acknowledge 这种）
-        // 直接把 message 交给 output()，然后 resolve() 结束
-        if (msg.message) {
-            output(msg.message);
         }
-        resolve(); // 不再进入 readPrompt
-        return;
-    }
 
-    // 2) 如果真的有 onInput，那才走原本交互逻辑
-    if (msg.message) {
-        output(msg.message);
-    }
-    readPrompt(msg.prompt || ">").then((input) => msg.onInput(input))
-        .then((finalMsg) => resolve(finalMsg));
-    return;
-}
+        // 情况 A: 返回是字符串或数组
+        // （比如老系统命令直接 resolve("hi") 或 resolve(["line1","line2"])）
+        if (!msg || msg.constructor === String || msg.constructor === Array) {
+            resolve(msg);
+            return;
         }
+
+        // 情况 B: 返回是对象
+        if (msg && msg.constructor === Object) {
+            // case B1: “一发输出然后结束”的命令
+            // 我们的 status / profile / acknowledge 都是这种：
+            // { delayed: 30, clear:false, message:[ "...", "..." ] }
+            if (!msg.onInput) {
+                if (msg.message) {
+                    // 直接把 message 打出来
+                    output(msg.message);
+                }
+                // 命令结束
+                resolve();
+                return;
+            }
+
+            // case B2: 真正的交互式程序：它既有 message 又有 onInput
+            if (msg.message) {
+                output(msg.message);
+            }
+            readPrompt(msg.prompt || ">")
+                .then((input) => msg.onInput(input))
+                .then((finalMsg) => resolve(finalMsg));
+            return;
+        }
+
+        // 兜底（几乎不会走到）
         resolve(msg);
     });
 }
