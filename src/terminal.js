@@ -7,6 +7,9 @@
 const UP_ARROW_KEYCODE = 38;
 const DOWN_ARROW_KEYCODE = 40;
 
+// fallback so our catch() doesn't crash older browsers
+console.exception = console.exception || console.error;
+
 let history_ = [];
 let histpos_ = 0;
 
