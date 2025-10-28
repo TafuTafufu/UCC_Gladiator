@@ -327,8 +327,8 @@ function ACKNOWLEDGE() {
 
 /* =========================
    把命令暴露给终端
-   ========================= */
+   ========================= 
 window.status = status;
 window.profile = profile;
 window.ACKNOWLEDGE = ACKNOWLEDGE;
-window.acknowledge = ACKNOWLEDGE;
+window.acknowledge = ACKNOWLEDGE;*/
