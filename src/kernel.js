@@ -677,17 +677,28 @@ function runSoftware(progName, program, args) {
             msg = { text: program.message, delayed: program.delayed };
         } else {
             msg = window[progName](args) || "";
-            if (msg.constructor === Object) {
-                if (!msg.onInput) {
-                    throw new Error("An onInput callback must be defined!");
-                }
-                if (msg.message) {
-                    output(msg.message);
-                }
-                readPrompt(msg.prompt || ">").then((input) => msg.onInput(input))
-                    .then((finalMsg) => resolve(finalMsg));
-                return;
-            }
+       if (msg && msg.constructor === Object) {
+
+    // 1) 如果这个返回值根本不是交互式（没有 onInput），
+    //    我们就把它当成普通打印，然后 resolve 掉。
+    if (!msg.onInput) {
+        // 常规 one-shot 命令（status / profile / acknowledge 这种）
+        // 直接把 message 交给 output()，然后 resolve() 结束
+        if (msg.message) {
+            output(msg.message);
+        }
+        resolve(); // 不再进入 readPrompt
+        return;
+    }
+
+    // 2) 如果真的有 onInput，那才走原本交互逻辑
+    if (msg.message) {
+        output(msg.message);
+    }
+    readPrompt(msg.prompt || ">").then((input) => msg.onInput(input))
+        .then((finalMsg) => resolve(finalMsg));
+    return;
+}
         }
         resolve(msg);
     });
