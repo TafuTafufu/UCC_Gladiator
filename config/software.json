@@ -8,7 +8,7 @@
   "identify": {
     "help": "内部测试程序（保留）"
   },
-  "ACKNOWLEDGE": {
+  "acknowledge": {
     "help": "确认收到Ω-3级折纸计划指令，并回传殖民联邦加密回执。仅限舰员身份使用。"
   },
   "status": {
