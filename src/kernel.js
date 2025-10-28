@@ -2,7 +2,7 @@
 // Global scope variables
 // =====================
 
-const defaultServerAddress = "localhost";
+const defaultServerAddress = "UUC_Gladiator";
 let serverDatabase = {};
 let userDatabase = {};
 let userList = [];
