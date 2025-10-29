@@ -189,20 +189,27 @@ function once(_, elem) {
  * ============================
  */
 function kernel(appName, args) {
-    // 🔧 尝试直接执行我们定义的自定义命令
+    // 先试图让我们自己的指令处理它
     if (tryRunCustomCommand(appName, args)) {
-        return;
+        // 我们已经手动 output() 过了
+        // 为了阻止后续报 "command not found"
+        // 这里返回一个成功结束的 Promise
+        return Promise.resolve();
     }
 
+    // 如果不是我们自己的，就走原来的流程
     const program = allowedSoftwares()[appName];
     if (program) {
         return software(appName, program, args);
     }
+
     const systemApp = system[appName] || system[appName.replace(".", "_")];
     const appDisabled = (program === null);
+
     if (!systemApp || appDisabled) {
         return Promise.reject(new CommandNotFoundError(appName));
     }
+
     return systemApp(args);
 }
 
@@ -649,13 +656,22 @@ function userPasswordFrom(creds) {
     }
     return splitted;
 }
+
 // ===== 自定义命令直连执行层 =====
 function tryRunCustomCommand(cmdName, argsArray) {
-  const fn = window[cmdName];
-  if (typeof fn !== "function") {
-    return false; // 没定义，交给系统默认逻辑
+  // 1. 如果这个命令是系统内建的（比如 login / mail / help / crew / etc）
+  //    我们就不要去抢，让 kernel 后面正常去跑 system[cmdName]
+  if (system && typeof system[cmdName] === "function") {
+    return false;
   }
 
+  // 2. 找看看有没有我们自定义挂到 window 上的命令
+  const fn = window[cmdName];
+  if (typeof fn !== "function") {
+    return false; // 没有自定义实现，交回去
+  }
+
+  // 3. 跑我们自己的实现
   let result;
   try {
     result = fn(argsArray);
@@ -664,12 +680,13 @@ function tryRunCustomCommand(cmdName, argsArray) {
       delayed: 0,
       clear: false,
       message: [
-        `<p style='color:#ff4d4d'>Runtime Error in ${cmdName}()</p>`,
+        `<p class='glow' style='color:#ff4d4d'>Runtime Error in ${cmdName}()</p>`,
         String(e)
       ]
     };
   }
 
+  // 4. 整理输出
   let lines = [];
   if (result && Array.isArray(result.message)) {
     lines = result.message;
@@ -680,7 +697,9 @@ function tryRunCustomCommand(cmdName, argsArray) {
   }
 
   lines.forEach(line => output(line));
-  return true; // 表示我们自己接管了
+
+  // 表示我们已经完整处理了这个命令
+  return true;
 }
 
 function runSoftware(progName, program, args) {
