@@ -23,44 +23,6 @@ function initDateObject() {
     const reference = serverDatabase.reference ? serverDatabase.reference : "(Solar System Standard Time)";
     serverDate = { day, month, year, reference };
 }
-// 计算当前登录用户的可见收件箱数量
-function getInboxCountForCurrentUser() {
-  if (!userDatabase || !userDatabase.userId) return 0;
-  const me = userDatabase.userId;
-  try {
-    return (mailList || []).filter(m => Array.isArray(m.to) && m.to.includes(me)).length;
-  } catch (e) {
-    return 0;
-  }
-}
-// 如有新邮件则提示（自动、只弹一次直到收件箱再次变多）
-function showNewMailBannerIfAny() {
-  if (!serverDatabase || !serverDatabase.serverAddress || !userDatabase || !userDatabase.userId) return;
-  const key = `mail_seen_count_${serverDatabase.serverAddress}_${userDatabase.userId}`;
-  const lastSeen = parseInt(localStorage.getItem(key) || "0", 10);
-  const nowCount = getInboxCountForCurrentUser();
-
-  // 只有“变多”才提示；等于或变少都不提示
-  if (nowCount > lastSeen) {
-    if (typeof output === "function") {
-      output([
-        "<p class='glow'>[系统通告]</p>新任务信件已注入舰载邮箱。"
-      ]);
-    }
-    localStorage.setItem(key, String(nowCount));
-  } else if (nowCount >= 0 && isNaN(lastSeen)) {
-    // 容错：如果本地没有记录，写入一次当前值，避免首次就误报
-    localStorage.setItem(key, String(nowCount));
-  }
-}
-
-
-function debugObject(obj) {
-    for (const property in obj) {
-        console.log(`${property}: ${JSON.stringify(obj[property])}`);
-        output(`${property}: ${JSON.stringify(obj[property])}`);
-    }
-}
 
 function setHeader(msg) {
     // prompt显示形如 [萝拉·沃伊特 / 驾驶员&虚拟造梦者@UUC-GLD] #
@@ -267,6 +229,7 @@ kernel.connectToServer = function connectToServer(serverAddress, userName, passw
                 });
                 $.get(`config/network/${serverInfo.serverAddress}/mailserver.json`, (mails) => {
                     mailList = mails;
+                    showNewMailBannerIfAny(); // 新增：检测新邮件
                 });
 
                 setHeader("Connection successful");
@@ -291,6 +254,7 @@ kernel.connectToServer = function connectToServer(serverAddress, userName, passw
 
                     $.get(`config/network/${serverInfo.serverAddress}/mailserver.json`, (mails) => {
                         mailList = mails;
+                        showNewMailBannerIfAny();
                     });
                     setHeader("Connection successful");
                     resolve();
@@ -861,4 +825,41 @@ function dweet(u, width, height, delay, style) {
 function R(r, g, b, a) {
     a = typeof a === "undefined" ? 1 : a;
     return `rgba(${r | 0},${g | 0},${b | 0},${a})`;
+}
+// 计算当前登录用户的可见收件箱数量
+function getInboxCountForCurrentUser() {
+  if (!userDatabase || !userDatabase.userId) return 0;
+  const me = userDatabase.userId;
+  try {
+    return (mailList || []).filter(m => Array.isArray(m.to) && m.to.includes(me)).length;
+  } catch (e) {
+    return 0;
+  }
+}
+// 如有新邮件则提示（自动、只弹一次直到收件箱再次变多）
+function showNewMailBannerIfAny() {
+  if (!serverDatabase || !serverDatabase.serverAddress || !userDatabase || !userDatabase.userId) return;
+  const key = `mail_seen_count_${serverDatabase.serverAddress}_${userDatabase.userId}`;
+  const lastSeen = parseInt(localStorage.getItem(key) || "0", 10);
+  const nowCount = getInboxCountForCurrentUser();
+
+  // 只有“变多”才提示；等于或变少都不提示
+  if (nowCount > lastSeen) {
+    if (typeof output === "function") {
+      output([
+        "<p class='glow'>[系统通告]</p>新任务信件已注入舰载邮箱。"
+      ]);
+    }
+    localStorage.setItem(key, String(nowCount));
+  } else if (nowCount >= 0 && isNaN(lastSeen)) {
+    // 容错：如果本地没有记录，写入一次当前值，避免首次就误报
+    localStorage.setItem(key, String(nowCount));
+  }
+}
+
+function debugObject(obj) {
+    for (const property in obj) {
+        console.log(`${property}: ${JSON.stringify(obj[property])}`);
+        output(`${property}: ${JSON.stringify(obj[property])}`);
+    }
 }
