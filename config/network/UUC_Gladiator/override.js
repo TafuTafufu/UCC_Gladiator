@@ -610,3 +610,72 @@ console.log(
   "color:#80ffaa"
 );
 
+// === Y/N 对“地球拦截行动 / 小纸条1号”的应答（登录态才生效） ===
+(function () {
+  const ACK_KEY = "ack_smallnote1"; // 本地记录：Y 或 N
+
+  function isLoggedIn() {
+    return !!(window.userDatabase && userDatabase.userId && userDatabase.userId !== "visitor");
+  }
+
+  function stamp() {
+    const d = new Date();
+    const pad = (n) => (n < 10 ? "0" + n : "" + n);
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+  }
+
+  // Y：确认接收
+  window.y = function () {
+    if (!isLoggedIn()) return; // 未登录时，由 kernel 放行到 "command not found"
+    const who = userDatabase.userId;
+    const prev = localStorage.getItem(ACK_KEY);
+
+    if (prev === "Y") {
+      return {
+        message: [
+          "<p class='glow'>[Ω-3 ACK]</p>系统记录：你已确认过此任务，无需重复回执。"
+        ]
+      };
+    }
+
+    localStorage.setItem(ACK_KEY, "Y");
+    return {
+      message: [
+        "<p class='glow'>[Ω-3 ACK]</p>地球拦截行动",
+        `回执人：${who}`,
+        `时间戳：${stamp()}`,
+        "状态：<b>已确认 / Proceed</b>",
+        "",
+        "<span style='color:#888'>指挥部确认：任务已纳入全舰链路。</span>"
+      ]
+    };
+  };
+
+  // N：拒绝/犹豫（系统会记录，但任务不会中止）
+  window.n = function () {
+    if (!isLoggedIn()) return;
+    const who = userDatabase.userId;
+    const prev = localStorage.getItem(ACK_KEY);
+
+    if (prev === "N") {
+      return {
+        message: [
+          "<p class='glow'>[Ω-3 ACK]</p>系统记录：你的反馈已收到，任务仍在执行中。"
+        ]
+      };
+    }
+
+    localStorage.setItem(ACK_KEY, "N");
+    return {
+      message: [
+        "<p class='glow'>[Ω-3 ACK]</p>地球拦截行动",
+        `回执人：${who}`,
+        `时间戳：${stamp()}`,
+        "状态：<b>反馈：暂未确认 / Hold</b>",
+        "",
+        "<span style='color:#888'>上级通告：任务已知难度与风险，期待你的判断与执行。</span>",
+        "<span style='color:#888'>备注：Ω-3 指令不可拒绝，系统已将此回执标记为“心理应答”。</span>"
+      ]
+    };
+  };
+})();
