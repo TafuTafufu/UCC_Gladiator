@@ -1,24 +1,20 @@
 // ============================
-// override.js FINAL CLEAN
+// override.js - unified final
 // ============================
+//
 // 功能：
-// 1. 定义 ship 的人物档案 window.crewProfiles
-//    - 每个人包含 public[] 和 full[]
-// 2. 重写 crew() / profile()，并套上权限检查
-//    - crew           => 公共在岗信息 (public)
-//    - profile        => 看自己的 full
-//    - profile <name> => 看别人的 full（要权限）
-// 3. 权限：
-//    - 自己永远能看自己的 full
-//    - diana / andrew: 全舰权限
-//    - vincent: 额外可看 lola
-//    - 其他：只能看自己
-// 4. 重写 help() 成为舰载指令索引
-// 5. 干掉不需要的旧命令 (echo / ssh / telnet / ping / read / date / whoami)
-// 6. 所有输出都放进 <div class="uuc-block"> 里，CSS 只会影响这些块
+// 1. 定义我们自己的 crewProfiles（public/full）并覆盖旧数据
+// 2. 实现 crew() / profile() 带权限、带段落换行块
+// 3. 重写 help()，并强制注入系统命令表
+// 4. 删除我们不要的命令（echo / ssh / telnet / ping / read / date / whoami）
+// 5. 修正格式化输出，让文本自动换行且不闪烁
+//
+// 要求：此文件必须在 index.html 里最后一个 <script> 载入
 // ============================
 
-// ---------- 1. 舰员档案 ----------
+
+// ---------- 1. 全舰档案：覆盖 window.crewProfiles ----------
+
 window.crewProfiles = {
   damien: {
     img: "damien.jpg",
@@ -61,7 +57,7 @@ HP:16  MP:13
   虚拟造梦 25%，英语 75%
 
 <b>战斗数据：</b>
-  斗殴 60% (30/12)，伤害 1D3+DB / 武器伤害
+  斗殴 60% (30/12)，伤害 1D3+DB
   科尼尔 E-1 65% (32/13)，伤害 2D6，射程 15 码
   格洛克 23 65% (32/13)，伤害 1D10+1，射程 20 码
   科尼尔 E-2 70% (35/14)，伤害 4D6，射程 35 码
@@ -75,9 +71,9 @@ HP:16  MP:13
 个人描述：强壮的外表，黑发棕眼。
 思想与信念：别再东躲西藏了，我们应该尽快和敌人干上一仗，早日夺回地球。
 宝贵之物：圣克里斯多福脖子上的链坠，由爷爷传给你的圣遗物。
-特质：训练有素，虽有时会头脑发热。你生来就拥有成为军人的天赋。无论是护航还是包围敌对目标，每个任务都极度认真。
-职责：操纵角斗士号的电磁轨道炮，发射成簇的电磁加速炸弹。最近被训练做助理工程师，也逐渐在维修工作中找到成就感。
-难言之隐：你做梦都想着收复地球。你心里知道你是军队里的英雄。这种信念几乎是你全部的精神支撑。`
+特质：训练有素，虽然偶尔会头脑发热。你生来就拥有成为军人的天赋。
+职责：操纵角斗士号的电磁轨道炮，发射成簇的电磁加速炸弹。后来也被训练成助理工程师，并逐渐在维修工作中找到成就感。
+难言之隐：你做梦都想着收复地球。你心里知道你是军队里的英雄——这种信念几乎是你活下去的全部精神支撑。`
     ]
   },
 
@@ -120,7 +116,7 @@ HP:15  MP:16
   潜行 30%，虚拟造梦 15%，英语 80%
 
 <b>战斗数据：</b>
-  斗殴 40% (20/8)，伤害 1D3+DB / 武器伤害
+  斗殴 40% (20/8)，伤害 1D3+DB
   科尼尔 E-1 60% (30/12)，伤害 2D6，射程 15 码
   格洛克 23 60% (30/12)，伤害 1D10+1，射程 20 码
   闪避 30% (15/6)
@@ -138,7 +134,7 @@ HP:15  MP:16
 宝贵之物：你的工具箱。
 特质：你总觉得任何东西都还能修好。
 职责：损害管制 / 现场抢修 / 验证“折纸计划”硬件真伪，确保拿到的不是陷阱。
-压力源：你知道这次交接可能决定殖民联邦的未来。
+压力：你知道这次交接可能决定殖民联邦的未来。
 难言之隐：你经常梦见雪地与河流的声音，但你从未见过真正的雪。`
     ]
   },
@@ -182,7 +178,7 @@ HP:12  MP:15
   潜行 35%，虚拟造梦 70%，英语 75%
 
 <b>战斗数据：</b>
-  斗殴 35% (17/7)，伤害 1D3 / 武器伤害
+  斗殴 35% (17/7)，伤害 1D3
   科尼尔 E-1 60% (30/12)，伤害 2D6，射程 15 码
   Skorpion SMG 55% (27/11)，伤害 1D8，射程 40 码
   闪避 37% (18/7)
@@ -197,10 +193,10 @@ HP:12  MP:15
 <b>背景 / 心理评估：</b>
 个人描述：老鼠似的面容，亮棕色长发，翡翠绿色的眼睛。
 思想与信念：至少虚拟空间里的生活不像现实那么复杂。
-宝贵之物：稳定剂——同时也是你的依赖来源。
+宝贵之物：稳定剂——但同时它也是你的依赖。
 特质：明确的命令能让你稳定。你天生是“虚拟造梦者”，能深度接管飞船神经链路。
-难言之隐：高度依赖药物，停药几天内会精神瓦解。你也知道这点，并且几乎接受“可能离不开它”这个事实。
-恐惧症与狂躁症：反复梦见火焰和爆裂，只能在深度沉浸里感到安全；因为上次事故，你被禁止在接近段做全时深沉接管。`
+难言之隐：高度依赖药物，停药几天内会精神瓦解。你自己也知道，并且几乎接受“离不开它”这件事。
+恐惧症 / 狂躁反应：反复梦见火焰和爆裂，只能在深度沉浸里感到安全；因为上次事故，你被禁止在接近段做全时深沉接管。`
     ]
   },
 
@@ -243,7 +239,7 @@ HP:12  MP:15
   虚拟造梦 35%，英语 80%
 
 <b>战斗数据：</b>
-  斗殴 40% (20/8)，伤害 1D3+DB / 武器伤害
+  斗殴 40% (20/8)，伤害 1D3+DB
   科尼尔 E-1 45% (22/9)，伤害 2D6，射程 15 码
   格洛克 23 45% (22/9)，伤害 1D10+1，射程 20 码
   霰弹枪 50% (25/10)，伤害 1D10+7，射程 25 码
@@ -260,10 +256,10 @@ HP:12  MP:15
 个人描述：稍显娃娃脸，红发绿眼。
 思想与信念：没有系统是绝对安全的。
 珍视之人：萝拉·沃伊特——你过度保护的对象。
-特质：你很愿意做别人的盾牌，把“保护她”当成你存在的意义。
+特质：你把“保护她”当成你存在的意义。
 经历：13 岁因入侵殖民网络被捕，后来被“编制化”，成了联邦的武器。
-难言之隐：对萝拉有黏着式保护欲，甚至愿意越权/破坏规程只为了她安全。
-恐惧症与狂躁症：你持续处于“被抓就会死”的偏执警戒状态。你相信所有系统都在背叛你。`
+难言之隐：你对萝拉有黏着式保护欲，甚至愿意越权/破坏规程只为了她安全。
+恐惧症 / 狂躁反应：你持续处于“被抓就会死”的偏执警戒状态；你相信所有系统都在背叛你。`
     ]
   },
 
@@ -306,7 +302,7 @@ HP:13  MP:14
   潜行 35%，虚拟造梦 24%，英语 60%
 
 <b>战斗数据：</b>
-  斗殴 30% (15/6)，伤害 1D3 / 武器伤害
+  斗殴 30% (15/6)，伤害 1D3
   科尼尔 E-1 40% (20/8)，伤害 2D6，射程 15 码
   格洛克 23 40% (20/8)，伤害 1D10+1，射程 20 码
   科尼尔 E-2 50% (25/10)，伤害 4D6，射程 35 码
@@ -366,7 +362,7 @@ HP:14  MP:15
   虚拟造梦 30%，语言：英语 80%，米戈语 65%
 
 <b>战斗数据：</b>
-  斗殴 25% (12/5)，伤害 1D3+DB / 武器伤害
+  斗殴 25% (12/5)，伤害 1D3+DB
   科尼尔 E-1 70% (35/14)，伤害 2D6，射程 15 码
   格洛克 23 70% (35/14)，伤害 1D10+1，射程 20 码
   闪避 45% (22/9)
@@ -383,14 +379,17 @@ HP:14  MP:15
 个人描述：尖脸，金色短发，蓝眼睛。
 思想与信念：为了让人类继续活下去，任何代价都可以接受。
 特质：表面礼貌，实则是极度冷静的现实主义者。
-职责：你是殖民联邦的首席交涉人，与“米戈”打交易，获取折纸计划需要的科研数据。你很清楚那交易在伦理上有多脏。
+职责：你是殖民联邦的首席交涉人，与“米戈”打交易，拿到折纸计划需要的科研数据。你很清楚那交易在伦理上有多脏。
 难言之隐：你已经完全接受“如果必须牺牲整艘角斗士号才能让人类存活，那也必须做”。
-恐惧症与狂躁症：你对肉类有强烈的生理排斥。你会梦见在一片冰冷黑暗的地方寻找一个迷路的孩子。`
+恐惧症 / 狂躁反应：你对肉类有强烈的生理排斥。你会梦见在一片冰冷黑暗的地方寻找一个迷路的孩子。`
     ]
   }
 };
 
-// ---------- 2. 工具函数 ----------
+
+
+// ---------- 2. 小工具 ----------
+
 function getCurrentUserId() {
   const raw = localStorage.getItem("loggedUser") || "visitor";
   return raw.toLowerCase();
@@ -398,13 +397,13 @@ function getCurrentUserId() {
 
 function getCrewArray() {
   const order = ["martin", "lola", "vincent", "diana", "andrew", "damien"];
-  const out = [];
+  const result = [];
   order.forEach(id => {
     if (window.crewProfiles[id]) {
-      out.push({ id, data: window.crewProfiles[id] });
+      result.push({ id, data: window.crewProfiles[id] });
     }
   });
-  return out;
+  return result;
 }
 
 function resolveCrewTarget(arg) {
@@ -424,7 +423,7 @@ function resolveCrewTarget(arg) {
 
 function canViewFullProfile(requester, target) {
   requester = requester.toLowerCase();
-  target = target.toLowerCase();
+  target    = target.toLowerCase();
 
   if (requester === target) return true;
   if (requester === "diana" || requester === "andrew") return true;
@@ -432,7 +431,10 @@ function canViewFullProfile(requester, target) {
   return false;
 }
 
-// ---------- 3. crew() ----------
+
+
+// ---------- 3. crew() 指令 ----------
+
 function crew(args) {
   const me = getCurrentUserId();
 
@@ -445,6 +447,7 @@ function crew(args) {
         "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
         "此终端处于访客 / 未授权模式。",
         "舰员身份验证后可读取舰上在岗信息（crew）。",
+        "",
         `</div>`
       ]
     };
@@ -452,7 +455,7 @@ function crew(args) {
 
   const list = getCrewArray();
 
-  // crew -> roster
+  // crew
   if (!args || args.length === 0) {
     const out = [];
     out.push(`<div class="uuc-block">`);
@@ -467,7 +470,7 @@ function crew(args) {
     return { delayed: 0, clear: false, message: out };
   }
 
-  // crew <id>
+  // crew lola / crew 2
   const target = resolveCrewTarget(args[0]);
   if (!target) {
     return {
@@ -475,7 +478,7 @@ function crew(args) {
       clear: false,
       message: [
         `<div class="uuc-block">`,
-        "<p class='glow' style='color:#ff4d4d'>记录不可用</p>",
+        "<p class='glow' style='color:#ff4d4d'>档案不可用</p>",
         "该身份未在此节点登记。",
         `</div>`
       ]
@@ -487,12 +490,17 @@ function crew(args) {
     `<div class="uuc-block">`,
     `<p class='glow'>[在岗信息] ${target.id.toUpperCase()}</p>`,
     ...pubInfo,
+    "",
     `</div>`
   ];
+
   return { delayed: 0, clear: false, message: out };
 }
 
-// ---------- 4. profile() ----------
+
+
+// ---------- 4. profile() 指令 ----------
+
 function profile(args) {
   const me = getCurrentUserId();
   const db = window.crewProfiles || {};
@@ -512,7 +520,8 @@ function profile(args) {
   }
 
   const targetId = (args && args[0] ? args[0] : me).toLowerCase();
-  const record = db[targetId];
+  const record   = db[targetId];
+
   if (!record) {
     return {
       delayed: 0,
@@ -550,23 +559,31 @@ function profile(args) {
     ...fullData,
     `</div>`
   ];
+
   return { delayed: 20, clear: false, message: out };
 }
 
-// ---------- 5. 重写 help() ----------
-function newHelp(args) {
+
+
+// ---------- 5. help() 指令 (自定义舰载索引) ----------
+
+function customHelp(args) {
   const out = [];
+
   out.push(`<div class="uuc-block">`);
-  out.push("<p class='glow'>[舰载指令索引 / UUC_GLADIATOR]</p>");
+  out.push("<p class='glow' style='font-size:1.1rem'>╔════════════════════════════════╗</p>");
+  out.push("<p class='glow' style='font-size:1.1rem'>║  舰载指令索引 / UUC_GLADIATOR   ║</p>");
+  out.push("<p class='glow' style='font-size:1.1rem'>╚════════════════════════════════╝</p>");
   out.push("");
-  out.push("<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执");
+  out.push("<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执（不可撤回）");
   out.push("<b>crew</b>           - 舰员名册 / 在岗信息（公开）");
-  out.push("<b>profile [id]</b>  - 完整人物档案（高密级，默认查看自己）");
-  out.push("<b>status</b>         - 舰体 / 战术态势快照");
-  out.push("<b>login / logout</b> - 登录或登出舰载终端");
-  out.push("<b>help</b>           - 显示本索引");
+  out.push("<b>profile [id]</b>  - 人物完整档案（需权限；不带参数=看自己）");
+  out.push("<b>status</b>         - 舰体与战术态势快照");
+  out.push("<b>login / logout</b> - 切换舰员身份");
+  out.push("<b>clear</b>          - 清屏");
+  out.push("<b>help</b>           - 显示本帮助页面");
   out.push("");
-  out.push("<span style='color:#888'>注意：部分档案为 Ω-3 级保密，仅特批舰员可读。</span>");
+  out.push("<span style='color:#888'>注意：人物档案属于 Ω-3 级密级，部分字段仅授权舰员可见。</span>");
   out.push(`</div>`);
 
   return {
@@ -576,34 +593,35 @@ function newHelp(args) {
   };
 }
 
-// ---------- 6. 全局注册 ----------
-window.getCurrentUserId = getCurrentUserId;
-window.getCrewArray = getCrewArray;
-window.resolveCrewTarget = resolveCrewTarget;
-window.canViewFullProfile = canViewFullProfile;
 
-window.crew = crew;
+
+// ---------- 6. 注册到全局 & 劫持系统命令表 ----------
+
+window.getCurrentUserId    = getCurrentUserId;
+window.getCrewArray        = getCrewArray;
+window.resolveCrewTarget   = resolveCrewTarget;
+window.canViewFullProfile  = canViewFullProfile;
+
+window.crew    = crew;
 window.profile = profile;
-window.help = newHelp; // ← 重写 help
+window.help    = customHelp; // 覆盖 window.help
 
-console.log("%c[override.js 已加载并覆盖旧逻辑]", "color:#80ffaa");
+// 尝试篡改系统命令路由，让终端真正调用我们版本
+if (window.system && window.system.commands) {
+  // 覆盖 help
+  window.system.commands.help = customHelp;
 
-// ---------- 7. 删掉旧命令 ----------
-(function pruneOldCommands() {
-  const removeList = ["echo","ssh","telnet","ping","read","date","whoami"];
+  // 覆盖 crew/profile（以防老版本留存）
+  window.system.commands.crew = crew;
+  window.system.commands.profile = profile;
 
+  // 移除我们不要公开的旧命令
+  const removeList = ["echo", "ssh", "telnet", "ping", "read", "date", "whoami"];
   removeList.forEach(cmd => {
-    if (window[cmd]) {
-      delete window[cmd];
-    }
-    if (window.system && window.system.commands && window.system.commands[cmd]) {
+    if (window.system.commands[cmd]) {
       delete window.system.commands[cmd];
     }
   });
+}
 
-  console.log(
-    "%c[override.js] 已移除旧命令:",
-    "color:#ffa500",
-    removeList.join(", ")
-  );
-})();
+console.log("%c[override.js] 已加载：crew/profile/help 权限化 & 命令表清理完成", "color:#80ffaa");
