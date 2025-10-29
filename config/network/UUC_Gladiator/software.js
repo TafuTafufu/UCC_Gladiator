@@ -41,9 +41,10 @@
   }
 
   // 初始化当前登录用户（默认 visitor = 未授权访客）
-  if (!localStorage.getItem("loggedUser")) {
-    localStorage.setItem("loggedUser", "visitor");
-  }
+const logged = localStorage.getItem("loggedUser");
+if (logged && logged !== "visitor") {
+    output(`欢迎回来，${logged}`);
+}
 })();
 
 /* =========================
@@ -310,35 +311,17 @@ window.profile = profile;
    真正的输出逻辑在这里。
    ========================= */
 function ACKNOWLEDGE() {
-  const currentUser = localStorage.getItem("loggedUser") || "visitor";
-
-  if (currentUser === "visitor" || currentUser === "") {
-    return {
-      delayed: 0,
-      clear: false,
-      message: [
-        "<p class='glow' style='color:#ff4d4d'>⚠ 未授权访问</p>",
-        "UUC-GLADIATOR 频道加密：Ω-3",
-        "此频道仅接受舰员级别身份回执。",
-        "请先使用舰员账户 login 再次尝试 ACKNOWLEDGE。"
-      ]
-    };
-  }
-
+  const user = localStorage.getItem("loggedUser") || "visitor";
+  if (user === "visitor") return { message: ["❌ 未授权访客无法执行该指令。"] };
   return {
-    delayed: 50,
-    clear: false,
     message: [
-      "发送回执中...",
-      "信号匹配：UUC-GLADIATOR",
-      "频道加密：Ω-3",
-      "当前身份标记: " + currentUser,
-      "确认指令编号：A-2145-10-29-Ω3",
-      "<p class='glow'>通信回执已记录 ▪ 殖民联邦频道锁定中...</p>",
-      "任务状态：ACTIVE"
+      `<p class='glow'>Ω-3 回执确认成功</p>`,
+      `舰员 ${user} 已确认折纸计划任务。`,
+      `加密信号已发送至 殖民联邦行动司令部。`
     ]
   };
 }
+window.ACKNOWLEDGE = ACKNOWLEDGE;
 
 // 这三块是我们之前写的——人物卡库、权限判断、渲染
 // const crewProfiles = { martin: {...}, lola: {...}, ... }
