@@ -355,22 +355,22 @@ body {
 /* ---- UUC_Gladiator custom formatting overrides ---- */
 
 /* 让终端正文里的段落自动换行，而不是无限往右拉爆屏 */
-#container output {
-  white-space: pre-wrap;      /* 保留 \n，但允许一行太长时自动断行 */
-  word-break: break-word;     /* 中文/长串也能断 */
-  overflow-wrap: break-word;
-  max-width: 100%;
-  display: block;
-  line-height: 1.4;
-}
-
-/* glow 标题也能自动换行，不会撑出超长水平线 */
-#container output .glow {
+/* 仅对我们自己生成的战术输出块做易读排版，不影响欢迎横幅 */
+#container output .uuc-block {
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: break-word;
-  display: block;
   line-height: 1.4;
+  max-width: 100%;
+  display: block;
+}
+
+#container output .uuc-block .glow {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+  display: block;
 }
 
 /* ---- 停止闪烁，改成稳定高亮 ---- */
