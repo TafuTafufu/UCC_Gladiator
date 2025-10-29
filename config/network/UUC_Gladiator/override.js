@@ -599,12 +599,15 @@ console.log("%c[override.js 已加载并覆盖旧逻辑]", "color:#80ffaa");
   console.log("%c[override.js] 已移除旧命令:", "color:#ffa500", removeList.join(", "));
 })();
 
+// ===============================================
+// [舰载指令索引 / UUC_GLADIATOR] 自定义 help 命令
+// ===============================================
 window.help = function(args) {
   const out = [];
 
   out.push(`<div class="uuc-block">`);
   out.push("<p class='glow' style='font-size:1.1rem'>╔════════════════════════════════╗</p>");
-  out.push("<p class='glow' style='font-size:1.1rem'>║  舰载指令索引 / UUC_GLADIATOR  ║</p>");
+  out.push("<p class='glow' style='font-size:1.1rem'>║  舰载指令索引 / UUC_GLADIATOR   ║</p>");
   out.push("<p class='glow' style='font-size:1.1rem'>╚════════════════════════════════╝</p>");
   out.push("");
   out.push("<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执");
@@ -623,4 +626,7 @@ window.help = function(args) {
     message: out
   };
 };
+
+console.log("%c[override.js] help() 已重写为舰载索引版本", "color:#99ccff");
+
 
