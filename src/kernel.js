@@ -312,387 +312,330 @@ kernel.init = function init(cmdLineContainer, outputContainer) {
  * ============================
  */
 system = {
- dumpdb() {
-     return new Promise(() => {
-         output(":: serverDatabase - connected server information");
-         debugObject(serverDatabase);
-         output("----------");
-         output(":: userDatabase - connected user information");
-         debugObject(userDatabase);
-         output("----------");
-         output(":: userList - list of users registered in the connected server");
-         debugObject(userList);
-     });
- },
+    dumpdb() {
+        return new Promise(() => {
+            output(":: serverDatabase - connected server information");
+            debugObject(serverDatabase);
+            output("----------");
+            output(":: userDatabase - connected user information");
+            debugObject(userDatabase);
+            output("----------");
+            output(":: userList - list of users registered in the connected server");
+            debugObject(userList);
+        });
+    },
 
- whoami() {
-     return new Promise((resolve) => {
-         resolve(
-             `${serverDatabase.serverAddress}/${userDatabase.userId}`
-         );
-     });
- },
+    whoami() {
+        return new Promise((resolve) => {
+            resolve(
+                `${serverDatabase.serverAddress}/${userDatabase.userId}`
+            );
+        });
+    },
 
- clear() {
-     return new Promise((resolve) => {
-         setHeader();
-         resolve(false);
-     });
- },
+    clear() {
+        return new Promise((resolve) => {
+            setHeader();
+            resolve(false);
+        });
+    },
 
- date() {
-     return new Promise((resolve) => {
-         const date = new Date();
-         const time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-         resolve(String(`${serverDate.month} ${serverDate.day} ${serverDate.year} ${time} ${serverDate.reference}`));
-     });
- },
+    date() {
+        return new Promise((resolve) => {
+            const date = new Date();
+            const time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+            resolve(String(`${serverDate.month} ${serverDate.day} ${serverDate.year} ${time} ${serverDate.reference}`));
+        });
+    },
 
- echo(args) {
-     return new Promise((resolve) => {
-         resolve(args.join(" "));
-     });
- },
+    echo(args) {
+        return new Promise((resolve) => {
+            resolve(args.join(" "));
+        });
+    },
 
- help(args) {
-     return new Promise((resolve) => {
-         const programs = allowedSoftwares();
-         if (args.length === 0) {
-             const cmdNames = Object.keys(system).filter(
-                 (cmd) => {
-                     const program = programs[cmd];
-                     return program !== null && !(program && program.secretCommand) && cmd !== "dumpdb";
-                 }
-             );
-             const progNames = Object.keys(programs).filter(
-                 (pName) => programs[pName] && !programs[pName].secretCommand
-             );
-             Array.prototype.push.apply(cmdNames, progNames);
+    // ============================
+    // help：舰载索引版本（我们自定义）
+    // ============================
+    help(/* args */) {
+        return new Promise((resolve) => {
+            const out = [];
 
-             // 确保 crew 出现在帮助里
-             if (!cmdNames.includes("crew")) {
-                 cmdNames.push("crew");
-             }
+            out.push(`<div class="uuc-block">`);
+            out.push(`<p class="glow" style="font-size:1.1rem">╔════════════════════════════════╗</p>`);
+            out.push(`<p class="glow" style="font-size:1.1rem">║  舰载指令索引 / UUC_GLADIATOR   ║</p>`);
+            out.push(`<p class="glow" style="font-size:1.1rem">╚════════════════════════════════╝</p>`);
+            out.push(`<br>`);
 
-             cmdNames.sort();
-             resolve([
-                 "You can read the help of a specific command by entering as follows: 'help commandName'",
-                 "List of useful commands:",
-                 `<div class="ls-files">${cmdNames.join("<br>")}</div>`,
-                 "You can navigate in the commands usage history using the UP & DOWN arrow keys.",
-                 "The TAB key will provide command auto-completion."
-             ]);
-         } else if (args[0] === "clear") {
-             resolve(["Usage:", "> clear", "The clear command will wipe the content of the terminal, but it will not affect the history."]);
-         } else if (args[0] === "date") {
-             resolve(["Usage:", "> date", "The date command will print the current date-time into terminal."]);
-         } else if (args[0] === "echo") {
-             resolve(["Usage:", "> echo args", "The echo command will print args into terminal."]);
-         } else if (args[0] === "help") {
-             resolve(["Usage:", "> help", "The default help message. It will show the commands available on the server."]);
-         } else if (args[0] === "history") {
-             resolve(["Usage:", "> history", "The history command will list all the commands you already typed in this terminal."]);
-         } else if (args[0] === "login") {
-             resolve([
-                 "Usage:",
-                 "> login username:password",
-                 "Switch account: log in as another registered user on the server, to access your data files and messages."
-             ]);
-         } else if (args[0] === "mail") {
-             resolve(["Usage:", "> mail", "If you're logged in you can list your mail messages if any."]);
-         } else if (args[0] === "ping") {
-             resolve([
-                 "Usage:",
-                 "> ping address",
-                 "The ping command will try to reach a valid address.",
-                 "If the ping doesn't return a valid response, the address may be incorrect, may not exist or can't be reached locally."
-             ]);
-         } else if (args[0] === "read") {
-             resolve(["Usage:", "> read x", "If you're logged in you can read your mail messages if any."]);
-         } else if (args[0] === "ssh") {
-             resolve([
-                 "Usage:",
-                 "> ssh address",
-                 "> ssh username@address",
-                 "> ssh username:password@address",
-                 "You can connect to a valid address to access a specific server on the Internet.",
-                 "You may need to specify a username if the server has no default user.",
-                 "You may need to specify a password if the user account is protected."
-             ]);
-         } else if (args[0] === "whoami") {
-             resolve(["Usage:", "> whoami", "Display the server you are currently connected to, and the login you are registered with."]);
-         } else if (args[0] === "crew") {
-             resolve([
-                 "Usage:",
-                 "> crew",
-                 "> crew <编号>",
-                 "> crew <名字>",
-                 "",
-                 "显示舰上在岗信息。",
-                 "需要已登录任意舰员账号。",
-                 "",
-                 "示例：",
-                 "  crew           -- 列出名册",
-                 "  crew 2         -- 查看编号2的在岗信息",
-                 "  crew name      -- 查看指定舰员的在岗信息",
-                 "",
-                 "若需查看完整人物档案（详细数据/ 风险评估 / 武装详情），请使用 profile 指令。"
-             ]);
-         } else if (args[0] in softwareInfo) {
-             const customProgram = programs[args[0]];
-             if (customProgram.help) {
-                 resolve(["Usage:", `> ${args[0]}`, customProgram.help]);
-             }
-         } else if (args[0] in system && args[0] !== "dumpdb") {
-             console.error(`Missing help message for system command: ${args[0]}`);
-         } else {
-             resolve([`Unknow command ${args[0]}`]);
-         }
-     });
- },
+            // 只列我们想公开的
+            out.push(`<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执（不可撤回）<br>`);
+            out.push(`<b>crew</b>           - 舰员名册 / 在岗信息（公开）<br>`);
+            out.push(`<b>profile [id]</b>  - 完整人物档案（需权限；不带参数=查看自己）<br>`);
+            out.push(`<b>status</b>         - 舰体与战术态势快照<br>`);
+            out.push(`<b>login / logout</b> - 登录 / 登出舰载终端<br>`);
+            out.push(`<b>clear</b>          - 清屏<br>`);
+            out.push(`<b>help</b>           - 显示本帮助页面<br>`);
 
- login(args) {
-     return new Promise((resolve, reject) => {
-         // guard: 必须带 username:password
-         if (!args || args.length === 0) {
-             reject(new UsernameIsEmptyError());
-             return;
-         }
+            out.push(`<br>`);
+            out.push(`<span style="color:#888">注意：部分档案属于 Ω-3 级密级，仅特批舰员可见。</span>`);
+            out.push(`</div>`);
 
-         let userName = "";
-         let passwd = "";
-         try {
-             [userName, passwd] = userPasswordFrom(args[0]);
-         } catch (error) {
-             reject(error);
-             return;
-         }
-         if (!userName) {
-             reject(new UsernameIsEmptyError());
-             return;
-         }
+            resolve(out);
+        });
+    },
 
-         const matchingUser = userList.find((user) => user.userId === userName);
-         if (!matchingUser) {
-             reject(new UnknownUserError(userName));
-             return;
-         }
-         if (matchingUser.password && matchingUser.password !== passwd) {
-             reject(new InvalidPasswordError(userName));
-             return;
-         }
+    login(args) {
+        return new Promise((resolve, reject) => {
+            // guard: 必须带 username:password
+            if (!args || args.length === 0) {
+                reject(new UsernameIsEmptyError());
+                return;
+            }
 
-         userDatabase = matchingUser;
+            let userName = "";
+            let passwd = "";
+            try {
+                [userName, passwd] = userPasswordFrom(args[0]);
+            } catch (error) {
+                reject(error);
+                return;
+            }
+            if (!userName) {
+                reject(new UsernameIsEmptyError());
+                return;
+            }
 
-         // 同步当前身份（给 crew/profile 权限用）
-         currentLoggedUserId = userDatabase.userId || "visitor";
-         localStorage.setItem("loggedUser", currentLoggedUserId);
+            const matchingUser = userList.find((user) => user.userId === userName);
+            if (!matchingUser) {
+                reject(new UnknownUserError(userName));
+                return;
+            }
+            if (matchingUser.password && matchingUser.password !== passwd) {
+                reject(new InvalidPasswordError(userName));
+                return;
+            }
 
-         setHeader("Login successful");
-         resolve();
-     });
- },
+            userDatabase = matchingUser;
 
- logout() {
-     return new Promise(() => {
-         location.reload();
-     });
- },
+            // 同步当前身份（给 crew/profile 权限用）
+            currentLoggedUserId = userDatabase.userId || "visitor";
+            localStorage.setItem("loggedUser", currentLoggedUserId);
 
- exit() {
-     return new Promise(() => {
-         location.reload();
-     });
- },
+            setHeader("Login successful");
+            resolve();
+        });
+    },
 
- history() {
-     return new Promise((resolve) => {
-         const messageList = history_.map((line, i) => `[${i}] ${line}`); // eslint-disable-line no-undef
-         resolve(messageList);
-     });
- },
+    logout() {
+        return new Promise(() => {
+            location.reload();
+        });
+    },
 
- mail() {
-     return new Promise((resolve, reject) => {
-         const messageList = mailList
-             .filter((mail) => mail.to.includes(userDatabase.userId))
-             .map((mail, i) => `[${i}] ${mail.title}`);
-         if (messageList.length === 0) {
-             reject(new MailServerIsEmptyError());
-             return;
-         }
-         resolve(messageList);
-     });
- },
+    exit() {
+        return new Promise(() => {
+            location.reload();
+        });
+    },
 
- read(args) {
-     return new Promise((resolve, reject) => {
-         const mailIndex = Number(args[0]);
-         const messageList = mailList.filter((mail) => mail.to.includes(userDatabase.userId));
-         const mailAtIndex = messageList[mailIndex];
-         if (!mailAtIndex || !mailAtIndex.to.includes(userDatabase.userId)) {
-             reject(new InvalidMessageKeyError());
-             return;
-         }
-         let message = [];
-         message.push("---------------------------------------------");
-         message.push(`From: ${mailAtIndex.from}`);
-         message.push(`To: ${userDatabase.userId}@${serverDatabase.terminalID}`);
-         message.push("---------------------------------------------");
-         message = [...message, ...mailAtIndex.body.split("  ")];
-         resolve(message);
-     });
- },
+    history() {
+        return new Promise((resolve) => {
+            const messageList = history_.map((line, i) => `[${i}] ${line}`); // eslint-disable-line no-undef
+            resolve(messageList);
+        });
+    },
 
- // ============================
- // crew：列在岗信息（公共舰内信息）
- // ============================
- crew(args) {
-     return new Promise((resolve, reject) => {
-         const db = window.crewProfiles;
-         if (!db) {
-             reject(new Error("crew database not available on this node"));
-             return;
-         }
+    mail() {
+        return new Promise((resolve, reject) => {
+            const messageList = mailList
+                .filter((mail) => mail.to.includes(userDatabase.userId))
+                .map((mail, i) => `[${i}] ${mail.title}`);
+            if (messageList.length === 0) {
+                reject(new MailServerIsEmptyError());
+                return;
+            }
+            resolve(messageList);
+        });
+    },
 
-         // 当前登录的用户是谁？
-         const requester = (localStorage.getItem("loggedUser") || "visitor").toLowerCase();
-         const isCrew = requester !== "visitor";
+    read(args) {
+        return new Promise((resolve, reject) => {
+            const mailIndex = Number(args[0]);
+            const messageList = mailList.filter((mail) => mail.to.includes(userDatabase.userId));
+            const mailAtIndex = messageList[mailIndex];
+            if (!mailAtIndex || !mailAtIndex.to.includes(userDatabase.userId)) {
+                reject(new InvalidMessageKeyError());
+                return;
+            }
+            let message = [];
+            message.push("---------------------------------------------");
+            message.push(`From: ${mailAtIndex.from}`);
+            message.push(`To: ${userDatabase.userId}@${serverDatabase.terminalID}`);
+            message.push("---------------------------------------------");
+            message = [...message, ...mailAtIndex.body.split("  ")];
+            resolve(message);
+        });
+    },
 
-         // 访客没权限看 crew
-         if (!isCrew) {
-             resolve([
-                 "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
-                 "此终端处于访客/未授权模式。",
-                 "舰员身份验证后可读取舰上在岗信息 (crew)。"
-             ]);
-             return;
-         }
+    // ============================
+    // crew：列在岗信息（公共舰内信息）
+    // ============================
+    crew(args) {
+        return new Promise((resolve, reject) => {
+            const db = window.crewProfiles;
+            if (!db) {
+                reject(new Error("crew database not available on this node"));
+                return;
+            }
 
-         // 显示顺序 & 编号映射（玩家看到的 [1] [2] ...）
-         const rosterOrder = {
-             1: "martin",
-             2: "lola",
-             3: "vincent",
-             4: "diana",
-             5: "andrew",
-             6: "damien"
-         };
+            // 当前登录的用户是谁？
+            const requester = (localStorage.getItem("loggedUser") || "visitor").toLowerCase();
+            const isCrew = requester !== "visitor";
 
-         // 渲染单个人的“公开卡片”（public）
-         function renderPublicRecord(id) {
-             const rec = db[id];
-             if (!rec || !rec.public) {
-                 return [
-                     "<p class='glow' style='color:#ff4d4d'>记录不可用</p>",
-                     "该身份未在此节点登记。"
-                 ];
-             }
+            // 访客没权限看 crew
+            if (!isCrew) {
+                resolve([
+                    `<div class="uuc-block">`,
+                    `<p class='glow' style='color:#ff4d4d'>访问拒绝</p>`,
+                    `此终端处于访客/未授权模式。<br>舰员身份验证后可读取舰上在岗信息 (crew)。`,
+                    `</div>`
+                ]);
+                return;
+            }
 
-             return [
-                 `<p class='glow' style='font-size:1.1rem'>[在岗信息] ${id.toUpperCase()}</p>`,
-                 ...rec.public
-             ];
-         }
+            // 显示顺序 & 编号映射（玩家看到的 [1] [2] ...）
+            const rosterOrder = {
+                1: "martin",
+                2: "lola",
+                3: "vincent",
+                4: "diana",
+                5: "andrew",
+                6: "damien"
+            };
 
-         // 如果没带参数：列花名册
-         if (!args || args.length === 0) {
-             const listingLines = Object.entries(rosterOrder).map(([num, id]) => {
-                 const rec = db[id];
-                 // public[0] 整块文本的第一行一般是 "<b>名字</b>"
-                 const firstLine = rec && rec.public && rec.public[0]
-                     ? rec.public[0].split("\n")[0]
-                     : id;
-                 return `[${num}] ${firstLine}`;
-             });
+            // 渲染单个人的“公开卡片”（public）
+            function renderPublicRecord(id) {
+                const rec = db[id];
+                if (!rec || !rec.public) {
+                    return [
+                        `<div class="uuc-block">`,
+                        `<p class='glow' style='color:#ff4d4d'>记录不可用</p>`,
+                        `该身份未在此节点登记。`,
+                        `</div>`
+                    ];
+                }
 
-             resolve([
-                 "<p class='glow' style='font-size:1.1rem'>[CREW ROSTER / 舰内频道]</p>",
-                 ...listingLines,
-                 "",
-                 "使用 'crew <编号>' 或 'crew <名字>' 查看该成员的在岗信息。"
-             ]);
-             return;
-         }
+                return [
+                    `<div class="uuc-block">`,
+                    `<p class='glow' style='font-size:1.1rem'>[在岗信息] ${id.toUpperCase()}</p>`,
+                    ...rec.public,
+                    `</div>`
+                ];
+            }
 
-         // 有参数：可能是编号，也可能是名字
-         let query = args[0].toLowerCase();
+            // 如果没带参数：列花名册
+            if (!args || args.length === 0) {
+                const listingLines = Object.entries(rosterOrder).map(([num, id]) => {
+                    const rec = db[id];
+                    const firstLine = rec && rec.public && rec.public[0]
+                        ? rec.public[0].split("<br>")[0]
+                        : id;
+                    return `[${num}] ${firstLine}`;
+                });
 
-         // crew 2 -> 找 rosterOrder[2] 对应谁
-         if (!isNaN(parseInt(query))) {
-             const mapped = rosterOrder[parseInt(query)];
-             if (mapped) {
-                 query = mapped;
-             } else {
-                 resolve([
-                     "<p class='glow' style='color:#ff4d4d'>无结果</p>",
-                     "该编号未登记。"
-                 ]);
-                 return;
-             }
-         }
+                resolve([
+                    `<div class="uuc-block">`,
+                    `<p class='glow' style='font-size:1.1rem'>[CREW ROSTER / 舰内频道]</p>`,
+                    ...listingLines,
+                    `<br>使用 'crew &lt;编号&gt;' 或 'crew &lt;名字&gt;' 查看该成员的在岗信息。`,
+                    `</div>`
+                ]);
+                return;
+            }
 
-         // 再根据 id 查内容
-         const record = db[query];
-         if (!record) {
-             resolve([
-                 "<p class='glow' style='color:#ff4d4d'>无结果</p>",
-                 "该身份未登记。"
-             ]);
-             return;
-         }
+            // 有参数：可能是编号，也可能是名字
+            let query = args[0].toLowerCase();
 
-         resolve(renderPublicRecord(query));
-     });
- }, // ←←← 这里一定要有逗号！！！因为后面还有 ping()
+            // crew 2 -> 找 rosterOrder[2] 对应谁
+            if (!isNaN(parseInt(query))) {
+                const mapped = rosterOrder[parseInt(query)];
+                if (mapped) {
+                    query = mapped;
+                } else {
+                    resolve([
+                        `<div class="uuc-block">`,
+                        `<p class='glow' style='color:#ff4d4d'>无结果</p>`,
+                        `该编号未登记。`,
+                        `</div>`
+                    ]);
+                    return;
+                }
+            }
 
- ping(args) {
-     return new Promise((resolve, reject) => {
-         if (args === "") {
-             reject(new AddressIsEmptyError());
-             return;
-         }
+            // 再根据 id 查内容
+            const record = db[query];
+            if (!record) {
+                resolve([
+                    `<div class="uuc-block">`,
+                    `<p class='glow' style='color:#ff4d4d'>无结果</p>`,
+                    `该身份未登记。`,
+                    `</div>`
+                ]);
+                return;
+            }
 
-         $.get(`config/network/${args}/manifest.json`, (serverInfo) => {
-             resolve(`Server ${serverInfo.serverAddress} (${serverInfo.serverName}) can be reached`);
-         })
-         .fail(() => reject(new AddressNotFoundError(args)));
-     });
- },
+            resolve(renderPublicRecord(query));
+        });
+    }, // ← 逗号别删，后面还有 ping()
 
- telnet() {
-     return new Promise((_, reject) => {
-         reject(new Error("telnet is unsecure and is deprecated - use ssh instead"));
-     });
- },
+    ping(args) {
+        return new Promise((resolve, reject) => {
+            if (args === "") {
+                reject(new AddressIsEmptyError());
+                return;
+            }
 
- ssh(args) {
-     return new Promise((resolve, reject) => {
-         if (args === "") {
-             reject(new AddressIsEmptyError());
-             return;
-         }
-         let userName = "";
-         let passwd = "";
-         let serverAddress = args[0];
-         if (serverAddress.includes("@")) {
-             const splitted = serverAddress.split("@");
-             if (splitted.length !== 2) {
-                 reject(new InvalidCommandParameter("ssh"));
-                 return;
-             }
-             serverAddress = splitted[1];
-             try {
-                 [userName, passwd] = userPasswordFrom(splitted[0]);
-             } catch (error) {
-                 reject(error);
-                 return;
-             }
-         }
-         kernel.connectToServer(serverAddress, userName, passwd).then(resolve).catch(reject);
-     });
- }
+            $.get(`config/network/${args}/manifest.json`, (serverInfo) => {
+                resolve(`Server ${serverInfo.serverAddress} (${serverInfo.serverName}) can be reached`);
+            })
+            .fail(() => reject(new AddressNotFoundError(args)));
+        });
+    },
+
+    telnet() {
+        return new Promise((_, reject) => {
+            reject(new Error("telnet is unsecure and is deprecated - use ssh instead"));
+        });
+    },
+
+    ssh(args) {
+        return new Promise((resolve, reject) => {
+            if (args === "") {
+                reject(new AddressIsEmptyError());
+                return;
+            }
+            let userName = "";
+            let passwd = "";
+            let serverAddress = args[0];
+            if (serverAddress.includes("@")) {
+                const splitted = serverAddress.split("@");
+                if (splitted.length !== 2) {
+                    reject(new InvalidCommandParameter("ssh"));
+                    return;
+                }
+                serverAddress = splitted[1];
+                try {
+                    [userName, passwd] = userPasswordFrom(splitted[0]);
+                } catch (error) {
+                    reject(error);
+                    return;
+                }
+            }
+            kernel.connectToServer(serverAddress, userName, passwd).then(resolve).catch(reject);
+        });
+    }
 };
+
 // ============================
 // helpers
 // ============================
@@ -710,47 +653,47 @@ function userPasswordFrom(creds) {
 
 // ===== 自定义命令直连执行层 =====
 function tryRunCustomCommand(cmdName, argsArray) {
-  // 1. 如果这个命令是系统内建的（比如 login / mail / help / crew / etc）
-  //    我们就不要去抢，让 kernel 后面正常去跑 system[cmdName]
-  if (system && typeof system[cmdName] === "function") {
-    return false;
-  }
+    // 1. 如果这个命令是系统内建的（比如 login / mail / help / crew / etc）
+    //    我们就不要去抢，让 kernel 后面正常去跑 system[cmdName]
+    if (system && typeof system[cmdName] === "function") {
+        return false;
+    }
 
-  // 2. 找看看有没有我们自定义挂到 window 上的命令
-  const fn = window[cmdName];
-  if (typeof fn !== "function") {
-    return false; // 没有自定义实现，交回去
-  }
+    // 2. 找看看有没有我们自定义挂到 window 上的命令
+    const fn = window[cmdName];
+    if (typeof fn !== "function") {
+        return false; // 没有自定义实现，交回去
+    }
 
-  // 3. 跑我们自己的实现
-  let result;
-  try {
-    result = fn(argsArray);
-  } catch (e) {
-    result = {
-      delayed: 0,
-      clear: false,
-      message: [
-        `<p class='glow' style='color:#ff4d4d'>Runtime Error in ${cmdName}()</p>`,
-        String(e)
-      ]
-    };
-  }
+    // 3. 跑我们自己的实现
+    let result;
+    try {
+        result = fn(argsArray);
+    } catch (e) {
+        result = {
+            delayed: 0,
+            clear: false,
+            message: [
+                `<p class='glow' style='color:#ff4d4d'>Runtime Error in ${cmdName}()</p>`,
+                String(e)
+            ]
+        };
+    }
 
-  // 4. 整理输出
-  let lines = [];
-  if (result && Array.isArray(result.message)) {
-    lines = result.message;
-  } else if (result && typeof result.message === "string") {
-    lines = [result.message];
-  } else {
-    lines = ["(no output)"];
-  }
+    // 4. 整理输出
+    let lines = [];
+    if (result && Array.isArray(result.message)) {
+        lines = result.message;
+    } else if (result && typeof result.message === "string") {
+        lines = [result.message];
+    } else {
+        lines = ["(no output)"];
+    }
 
-  lines.forEach(line => output(line));
+    lines.forEach(line => output(line));
 
-  // 表示我们已经完整处理了这个命令
-  return true;
+    // 表示我们已经完整处理了这个命令
+    return true;
 }
 
 function runSoftware(progName, program, args) {
@@ -765,7 +708,6 @@ function runSoftware(progName, program, args) {
         }
 
         // 情况 A: 返回是字符串或数组
-        // （比如老系统命令直接 resolve("hi") 或 resolve(["line1","line2"])）
         if (!msg || msg.constructor === String || msg.constructor === Array) {
             resolve(msg);
             return;
@@ -774,19 +716,15 @@ function runSoftware(progName, program, args) {
         // 情况 B: 返回是对象
         if (msg && msg.constructor === Object) {
             // case B1: “一发输出然后结束”的命令
-            // 我们的 status / profile / acknowledge 都是这种：
-            // { delayed: 30, clear:false, message:[ "...", "..." ] }
             if (!msg.onInput) {
                 if (msg.message) {
-                    // 直接把 message 打出来
                     output(msg.message);
                 }
-                // 命令结束
                 resolve();
                 return;
             }
 
-            // case B2: 真正的交互式程序：它既有 message 又有 onInput
+            // case B2: 交互式程序
             if (msg.message) {
                 output(msg.message);
             }
@@ -796,7 +734,6 @@ function runSoftware(progName, program, args) {
             return;
         }
 
-        // 兜底（几乎不会走到）
         resolve(msg);
     });
 }
