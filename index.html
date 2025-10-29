@@ -16,17 +16,24 @@
       </div>
     </div>
 
-    <!-- 核心库 -->
+    <!-- 核心库 / 基础运行环境 -->
     <script src="src/lib/jquery-2.1.1.min.js"></script>
     <script src="src/error.js"></script>
     <script src="src/kernel.js"></script>
-    <script src="src/terminal.js"></script>
 
-    <!-- ✅ 新增：加载人物档案（必须在 software.js 之前） -->
+    <!-- 舰员数据：public/full 档案。必须先加载，让后面能用 window.crewProfiles -->
     <script src="config/crewProfiles.js"></script>
 
-    <!-- 自定义命令逻辑 -->
+    <!-- 高级命令实现（profile(), status(), ACKNOWLEDGE() 等）
+         注意：这里面会执行 window.profile = profile; window.canViewProfile = ... -->
+    <script src="src/software.js"></script>
+
+    <!-- 允许 software.json 里声明的命令（location / protection 等限制） -->
     <script src="config/software.js"></script>
+
+    <!-- 终端交互层（监听输入、调用 kernel.init 等）
+         这个要放在最后几步，保证上面所有命令都已注册到 window / system -->
+    <script src="src/terminal.js"></script>
 
     <!-- 视觉特效脚本 -->
     <script src="src/hack-reveal.js"></script>
