@@ -259,10 +259,25 @@ function renderProfileData(target) {
 }
 
 function profile(args) {
-  const requester = (localStorage.getItem("loggedUser") || "visitor").toLowerCase();
-  // profile           -> 看自己
-  // profile <name>    -> 试图看别人
-  const target = (args && args[0]) ? args[0].toLowerCase() : requester;
+  const user = localStorage.getItem("loggedUser") || "visitor";
+  const target = args && args[0] ? args[0].toLowerCase() : user;
+  const data = crewProfiles[target];
+  if (!data) return { message: ["无此档案或权限不足。"] };
+
+  const result = [
+    "<p class='glow'>档案：" + target + "</p>",
+    ...data.summary,
+    "",
+    "装备：",
+    ...data.gear,
+    "",
+    "心理记录：",
+    ...data.notes
+  ];
+  return { message: result };
+}
+window.profile = profile;
+
 
   if (!canViewProfile(requester, target)) {
     return {
