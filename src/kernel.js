@@ -312,342 +312,387 @@ kernel.init = function init(cmdLineContainer, outputContainer) {
  * ============================
  */
 system = {
-    dumpdb() {
-        return new Promise(() => {
-            output(":: serverDatabase - connected server information");
-            debugObject(serverDatabase);
-            output("----------");
-            output(":: userDatabase - connected user information");
-            debugObject(userDatabase);
-            output("----------");
-            output(":: userList - list of users registered in the connected server");
-            debugObject(userList);
-        });
-    },
+ dumpdb() {
+     return new Promise(() => {
+         output(":: serverDatabase - connected server information");
+         debugObject(serverDatabase);
+         output("----------");
+         output(":: userDatabase - connected user information");
+         debugObject(userDatabase);
+         output("----------");
+         output(":: userList - list of users registered in the connected server");
+         debugObject(userList);
+     });
+ },
 
-    whoami() {
-        return new Promise((resolve) => {
-            resolve(
-                `${serverDatabase.serverAddress}/${userDatabase.userId}`
-            );
-        });
-    },
+ whoami() {
+     return new Promise((resolve) => {
+         resolve(
+             `${serverDatabase.serverAddress}/${userDatabase.userId}`
+         );
+     });
+ },
 
-    clear() {
-        return new Promise((resolve) => {
-            setHeader();
-            resolve(false);
-        });
-    },
+ clear() {
+     return new Promise((resolve) => {
+         setHeader();
+         resolve(false);
+     });
+ },
 
-    date() {
-        return new Promise((resolve) => {
-            const date = new Date();
-            const time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-            resolve(String(`${serverDate.month} ${serverDate.day} ${serverDate.year} ${time} ${serverDate.reference}`));
-        });
-    },
+ date() {
+     return new Promise((resolve) => {
+         const date = new Date();
+         const time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+         resolve(String(`${serverDate.month} ${serverDate.day} ${serverDate.year} ${time} ${serverDate.reference}`));
+     });
+ },
 
-    echo(args) {
-        return new Promise((resolve) => {
-            resolve(args.join(" "));
-        });
-    },
+ echo(args) {
+     return new Promise((resolve) => {
+         resolve(args.join(" "));
+     });
+ },
 
-    help(args) {
-        return new Promise((resolve) => {
-            const programs = allowedSoftwares();
-            if (args.length === 0) {
-                const cmdNames = Object.keys(system).filter(
-                    (cmd) => {
-                        const program = programs[cmd];
-                        return program !== null && !(program && program.secretCommand) && cmd !== "dumpdb";
-                    }
-                );
-                const progNames = Object.keys(programs).filter(
-                    (pName) => programs[pName] && !programs[pName].secretCommand
-                );
-                Array.prototype.push.apply(cmdNames, progNames);
+ help(args) {
+     return new Promise((resolve) => {
+         const programs = allowedSoftwares();
+         if (args.length === 0) {
+             const cmdNames = Object.keys(system).filter(
+                 (cmd) => {
+                     const program = programs[cmd];
+                     return program !== null && !(program && program.secretCommand) && cmd !== "dumpdb";
+                 }
+             );
+             const progNames = Object.keys(programs).filter(
+                 (pName) => programs[pName] && !programs[pName].secretCommand
+             );
+             Array.prototype.push.apply(cmdNames, progNames);
 
-                // 我们也想把 'crew' 显示出来（如果我们加了 crew）
-                if (!cmdNames.includes("crew")) {
-                    cmdNames.push("crew"); // <<< 新增: crew 指令出现在 help 列表
-                }
+             // 确保 crew 出现在帮助里
+             if (!cmdNames.includes("crew")) {
+                 cmdNames.push("crew");
+             }
 
-                cmdNames.sort();
-                resolve([
-                    "You can read the help of a specific command by entering as follows: 'help commandName'",
-                    "List of useful commands:",
-                    `<div class="ls-files">${cmdNames.join("<br>")}</div>`,
-                    "You can navigate in the commands usage history using the UP & DOWN arrow keys.",
-                    "The TAB key will provide command auto-completion."
-                ]);
-            } else if (args[0] === "clear") {
-                resolve(["Usage:", "> clear", "The clear command will wipe the content of the terminal, but it will not affect the history."]);
-            } else if (args[0] === "date") {
-                resolve(["Usage:", "> date", "The date command will print the current date-time into terminal."]);
-            } else if (args[0] === "echo") {
-                resolve(["Usage:", "> echo args", "The echo command will print args into terminal."]);
-            } else if (args[0] === "help") {
-                resolve(["Usage:", "> help", "The default help message. It will show the commands available on the server."]);
-            } else if (args[0] === "history") {
-                resolve(["Usage:", "> history", "The history command will list all the commands you already typed in this terminal."]);
-            } else if (args[0] === "login") {
-                resolve(["Usage:", "> login username:password", "Switch account: log in as another registered user on the server, to access your data files and messages."]);
-            } else if (args[0] === "mail") {
-                resolve(["Usage:", "> mail", "If you're logged in you can list your mail messages if any."]);
-            } else if (args[0] === "ping") {
-                resolve([
-                    "Usage:",
-                    "> ping address",
-                    "The ping command will try to reach a valid address.",
-                    "If the ping doesn't return a valid response, the address may be incorrect, may not exist or can't be reached locally."
-                ]);
-            } else if (args[0] === "read") {
-                resolve(["Usage:", "> read x", "If you're logged in you can read your mail messages if any."]);
-            } else if (args[0] === "ssh") {
-                resolve([
-                    "Usage:",
-                    "> ssh address",
-                    "> ssh username@address",
-                    "> ssh username:password@address",
-                    "You can connect to a valid address to access a specific server on the Internet.",
-                    "You may need to specify a username if the server has no default user.",
-                    "You may need to specify a password if the user account is protected."
-                ]);
-            } else if (args[0] === "whoami") {
-                resolve(["Usage:", "> whoami", "Display the server you are currently connected to, and the login you are registered with."]);
-            } else if (args[0] === "crew") { // <<< 新增
-                resolve([
-                    "Usage:",
-                    "> crew",
-                    "> crew <index>",
-                    "crew 会列出你在本节点上有权限查看的舰员档案。",
-                    "crew <index> 会展开该档案，包含随身装备、心理记录（如果你有权限看）。"
-                ]);
-            } else if (args[0] in softwareInfo) {
-                const customProgram = programs[args[0]];
-                if (customProgram.help) {
-                    resolve(["Usage:", `> ${args[0]}`, customProgram.help]);
-                }
-            } else if (args[0] in system && args[0] !== "dumpdb") {
-                console.error(`Missing help message for system command: ${args[0]}`);
-            } else {
-                resolve([`Unknow command ${args[0]}`]);
-            }
-        });
-    },
+             cmdNames.sort();
+             resolve([
+                 "You can read the help of a specific command by entering as follows: 'help commandName'",
+                 "List of useful commands:",
+                 `<div class="ls-files">${cmdNames.join("<br>")}</div>`,
+                 "You can navigate in the commands usage history using the UP & DOWN arrow keys.",
+                 "The TAB key will provide command auto-completion."
+             ]);
+         } else if (args[0] === "clear") {
+             resolve(["Usage:", "> clear", "The clear command will wipe the content of the terminal, but it will not affect the history."]);
+         } else if (args[0] === "date") {
+             resolve(["Usage:", "> date", "The date command will print the current date-time into terminal."]);
+         } else if (args[0] === "echo") {
+             resolve(["Usage:", "> echo args", "The echo command will print args into terminal."]);
+         } else if (args[0] === "help") {
+             resolve(["Usage:", "> help", "The default help message. It will show the commands available on the server."]);
+         } else if (args[0] === "history") {
+             resolve(["Usage:", "> history", "The history command will list all the commands you already typed in this terminal."]);
+         } else if (args[0] === "login") {
+             resolve([
+                 "Usage:",
+                 "> login username:password",
+                 "Switch account: log in as another registered user on the server, to access your data files and messages."
+             ]);
+         } else if (args[0] === "mail") {
+             resolve(["Usage:", "> mail", "If you're logged in you can list your mail messages if any."]);
+         } else if (args[0] === "ping") {
+             resolve([
+                 "Usage:",
+                 "> ping address",
+                 "The ping command will try to reach a valid address.",
+                 "If the ping doesn't return a valid response, the address may be incorrect, may not exist or can't be reached locally."
+             ]);
+         } else if (args[0] === "read") {
+             resolve(["Usage:", "> read x", "If you're logged in you can read your mail messages if any."]);
+         } else if (args[0] === "ssh") {
+             resolve([
+                 "Usage:",
+                 "> ssh address",
+                 "> ssh username@address",
+                 "> ssh username:password@address",
+                 "You can connect to a valid address to access a specific server on the Internet.",
+                 "You may need to specify a username if the server has no default user.",
+                 "You may need to specify a password if the user account is protected."
+             ]);
+         } else if (args[0] === "whoami") {
+             resolve(["Usage:", "> whoami", "Display the server you are currently connected to, and the login you are registered with."]);
+         } else if (args[0] === "crew") {
+             resolve([
+                 "Usage:",
+                 "> crew",
+                 "> crew <编号>",
+                 "> crew <名字>",
+                 "",
+                 "显示舰上在岗信息（非机密）。",
+                 "需要已登录任意舰员账号。",
+                 "",
+                 "示例：",
+                 "  crew           -- 列出花名册",
+                 "  crew 2         -- 查看编号2的在岗信息",
+                 "  crew lola      -- 查看指定舰员的在岗信息",
+                 "",
+                 "若需查看完整人物档案（心理状态 / 风险评估 / 武装详情），请使用 profile 指令（受Ω-3权限限制）。"
+             ]);
+         } else if (args[0] in softwareInfo) {
+             const customProgram = programs[args[0]];
+             if (customProgram.help) {
+                 resolve(["Usage:", `> ${args[0]}`, customProgram.help]);
+             }
+         } else if (args[0] in system && args[0] !== "dumpdb") {
+             console.error(`Missing help message for system command: ${args[0]}`);
+         } else {
+             resolve([`Unknow command ${args[0]}`]);
+         }
+     });
+ },
 
-  login(args) {
-    return new Promise((resolve, reject) => {
-        // 这里要同时挡住:
-        // 1) 完全没传参数 (args === undefined)
-        // 2) 传了空数组 (args.length === 0)
-        if (!args || args.length === 0) {
-            reject(new UsernameIsEmptyError());
-            return;
-        }
+ login(args) {
+     return new Promise((resolve, reject) => {
+         // guard: 必须带 username:password
+         if (!args || args.length === 0) {
+             reject(new UsernameIsEmptyError());
+             return;
+         }
 
-        let userName = "";
-        let passwd = "";
-        try {
-            [userName, passwd] = userPasswordFrom(args[0]);
-        } catch (error) {
-            reject(error);
-            return;
-        }
-        if (!userName) {
-            reject(new UsernameIsEmptyError());
-            return;
-        }
+         let userName = "";
+         let passwd = "";
+         try {
+             [userName, passwd] = userPasswordFrom(args[0]);
+         } catch (error) {
+             reject(error);
+             return;
+         }
+         if (!userName) {
+             reject(new UsernameIsEmptyError());
+             return;
+         }
 
-        const matchingUser = userList.find((user) => user.userId === userName);
-        if (!matchingUser) {
-            reject(new UnknownUserError(userName));
-            return;
-        }
-        if (matchingUser.password && matchingUser.password !== passwd) {
-            reject(new InvalidPasswordError(userName));
-            return;
-        }
+         const matchingUser = userList.find((user) => user.userId === userName);
+         if (!matchingUser) {
+             reject(new UnknownUserError(userName));
+             return;
+         }
+         if (matchingUser.password && matchingUser.password !== passwd) {
+             reject(new InvalidPasswordError(userName));
+             return;
+         }
 
-        userDatabase = matchingUser;
+         userDatabase = matchingUser;
 
-        // 同步“谁现在登录了”
-        currentLoggedUserId = userDatabase.userId || "visitor";
-        localStorage.setItem("loggedUser", currentLoggedUserId);
+         // 同步当前身份（给 crew/profile 权限用）
+         currentLoggedUserId = userDatabase.userId || "visitor";
+         localStorage.setItem("loggedUser", currentLoggedUserId);
 
-        setHeader("Login successful");
-        resolve();
-    });
-},
+         setHeader("Login successful");
+         resolve();
+     });
+ },
 
-    logout() {
-        return new Promise(() => {
-            location.reload();
-        });
-    },
+ logout() {
+     return new Promise(() => {
+         location.reload();
+     });
+ },
 
-    exit() {
-        return new Promise(() => {
-            location.reload();
-        });
-    },
+ exit() {
+     return new Promise(() => {
+         location.reload();
+     });
+ },
 
-    history() {
-        return new Promise((resolve) => {
-            const messageList = history_.map((line, i) => `[${i}] ${line}`); // eslint-disable-line no-undef
-            resolve(messageList);
-        });
-    },
+ history() {
+     return new Promise((resolve) => {
+         const messageList = history_.map((line, i) => `[${i}] ${line}`); // eslint-disable-line no-undef
+         resolve(messageList);
+     });
+ },
 
-    mail() {
-        return new Promise((resolve, reject) => {
-            const messageList = mailList
-                .filter((mail) => mail.to.includes(userDatabase.userId))
-                .map((mail, i) => `[${i}] ${mail.title}`);
-            if (messageList.length === 0) {
-                reject(new MailServerIsEmptyError());
-                return;
-            }
-            resolve(messageList);
-        });
-    },
+ mail() {
+     return new Promise((resolve, reject) => {
+         const messageList = mailList
+             .filter((mail) => mail.to.includes(userDatabase.userId))
+             .map((mail, i) => `[${i}] ${mail.title}`);
+         if (messageList.length === 0) {
+             reject(new MailServerIsEmptyError());
+             return;
+         }
+         resolve(messageList);
+     });
+ },
 
-    read(args) {
-        return new Promise((resolve, reject) => {
-            const mailIndex = Number(args[0]);
-            const messageList = mailList.filter((mail) => mail.to.includes(userDatabase.userId));
-            const mailAtIndex = messageList[mailIndex];
-            if (!mailAtIndex || !mailAtIndex.to.includes(userDatabase.userId)) {
-                reject(new InvalidMessageKeyError());
-                return;
-            }
-            let message = [];
-            message.push("---------------------------------------------");
-            message.push(`From: ${mailAtIndex.from}`);
-            message.push(`To: ${userDatabase.userId}@${serverDatabase.terminalID}`);
-            message.push("---------------------------------------------");
-            message = [...message, ...mailAtIndex.body.split("  ")];
-            resolve(message);
-        });
-    },
+ read(args) {
+     return new Promise((resolve, reject) => {
+         const mailIndex = Number(args[0]);
+         const messageList = mailList.filter((mail) => mail.to.includes(userDatabase.userId));
+         const mailAtIndex = messageList[mailIndex];
+         if (!mailAtIndex || !mailAtIndex.to.includes(userDatabase.userId)) {
+             reject(new InvalidMessageKeyError());
+             return;
+         }
+         let message = [];
+         message.push("---------------------------------------------");
+         message.push(`From: ${mailAtIndex.from}`);
+         message.push(`To: ${userDatabase.userId}@${serverDatabase.terminalID}`);
+         message.push("---------------------------------------------");
+         message = [...message, ...mailAtIndex.body.split("  ")];
+         resolve(message);
+     });
+ },
 
-    // ============================
-    // crew：像 mail 一样浏览船员档案
-    // ============================
-    crew(args) { // <<< 新增
-        return new Promise((resolve, reject) => {
-            // 我们假设 crewProfiles / canViewProfile / renderProfileData
-            // 已经在全局可访问（例如在 config/software.js 里挂到了 window）
-            if (!window.crewProfiles || !window.canViewProfile || !window.renderProfileData) {
-                reject(new Error("crew database not available on this node"));
-                return;
-            }
+ // ============================
+ // crew：列在岗信息（公共舰内信息）
+ // ============================
+ crew(args) {
+     return new Promise((resolve, reject) => {
+         const db = window.crewProfiles;
+         if (!db) {
+             reject(new Error("crew database not available on this node"));
+             return;
+         }
 
-            const requester = currentLoggedUserId || "visitor";
+         // 当前登录的用户是谁？
+         const requester = (localStorage.getItem("loggedUser") || "visitor").toLowerCase();
+         const isCrew = requester !== "visitor";
 
-            // 如果没带参数：列出我能看的所有档案，像 mail 那样列成 [0] [1] [2]...
-            if (!args || args.length === 0) {
-                const visibleKeys = Object.keys(window.crewProfiles).filter((targetId) => {
-                    return window.canViewProfile(requester, targetId);
-                });
+         // 访客没权限看 crew
+         if (!isCrew) {
+             resolve([
+                 "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
+                 "此终端处于访客/未授权模式。",
+                 "舰员身份验证后可读取舰上在岗信息 (crew)。"
+             ]);
+             return;
+         }
 
-                if (visibleKeys.length === 0) {
-                    resolve([
-                        "No accessible crew records.",
-                        "(Either you are not authorized, or this node has restricted medical / command data.)"
-                    ]);
-                    return;
-                }
+         // 显示顺序 & 编号映射（玩家看到的 [1] [2] ...）
+         const rosterOrder = {
+             1: "martin",
+             2: "lola",
+             3: "vincent",
+             4: "diana",
+             5: "andrew",
+             6: "damien"
+         };
 
-                const listing = visibleKeys.map((id, i) => {
-                    // 简单生成“摘要行”用来浏览
-                    const summaryLine = window.crewProfiles[id].summary?.[0] || id;
-                    return `[${i}] ${summaryLine}`;
-                });
+         // 渲染单个人的“公开卡片”（public）
+         function renderPublicRecord(id) {
+             const rec = db[id];
+             if (!rec || !rec.public) {
+                 return [
+                     "<p class='glow' style='color:#ff4d4d'>记录不可用</p>",
+                     "该身份未在此节点的舰上在岗信息登记中。"
+                 ];
+             }
 
-                resolve([
-                    "<p class='glow' style='font-size:1.1rem'>[CREW ROSTER ACCESS / Ω-3 CHANNEL]</p>",
-                    ...listing,
-                    "",
-                    "Use 'crew <index>' to inspect a profile."
-                ]);
+             return [
+                 `<p class='glow' style='font-size:1.1rem'>[在岗信息] ${id.toUpperCase()}</p>`,
+                 ...rec.public
+             ];
+         }
 
-                return;
-            }
+         // 如果没带参数：列花名册
+         if (!args || args.length === 0) {
+             const listingLines = Object.entries(rosterOrder).map(([num, id]) => {
+                 const rec = db[id];
+                 // public[0] 整块文本的第一行一般是 "<b>名字</b>"
+                 const firstLine = rec && rec.public && rec.public[0]
+                     ? rec.public[0].split("\n")[0]
+                     : id;
+                 return `[${num}] ${firstLine}`;
+             });
 
-            // 如果有参数，比如 crew 1：尝试展开对应索引
-            const chosenIndex = Number(args[0]);
-            if (Number.isNaN(chosenIndex)) {
-                reject(new Error("Invalid crew index."));
-                return;
-            }
+             resolve([
+                 "<p class='glow' style='font-size:1.1rem'>[CREW ROSTER / 舰内频道]</p>",
+                 ...listingLines,
+                 "",
+                 "使用 'crew <编号>' 或 'crew <名字>' 查看该成员的在岗信息。"
+             ]);
+             return;
+         }
 
-            const visibleKeys = Object.keys(window.crewProfiles).filter((targetId) => {
-                return window.canViewProfile(requester, targetId);
-            });
+         // 有参数：可能是编号，也可能是名字
+         let query = args[0].toLowerCase();
 
-            const targetId = visibleKeys[chosenIndex];
-            if (!targetId) {
-                reject(new Error("Invalid crew index or insufficient clearance."));
-                return;
-            }
+         // crew 2 -> 找 rosterOrder[2] 对应谁
+         if (!isNaN(parseInt(query))) {
+             const mapped = rosterOrder[parseInt(query)];
+             if (mapped) {
+                 query = mapped;
+             } else {
+                 resolve([
+                     "<p class='glow' style='color:#ff4d4d'>无结果</p>",
+                     "该编号未在当前花名册登记。"
+                 ]);
+                 return;
+             }
+         }
 
-            const fullProfileLines = window.renderProfileData(targetId);
-            resolve(fullProfileLines);
-        });
-    },
+         // 再根据 id 查内容
+         const record = db[query];
+         if (!record) {
+             resolve([
+                 "<p class='glow' style='color:#ff4d4d'>无结果</p>",
+                 "该身份未在舰上在岗登记中。"
+             ]);
+             return;
+         }
 
-    ping(args) {
-        return new Promise((resolve, reject) => {
-            if (args === "") {
-                reject(new AddressIsEmptyError());
-                return;
-            }
+         resolve(renderPublicRecord(query));
+     });
+ }, // ←←← 这里一定要有逗号！！！因为后面还有 ping()
 
-            $.get(`config/network/${args}/manifest.json`, (serverInfo) => {
-                resolve(`Server ${serverInfo.serverAddress} (${serverInfo.serverName}) can be reached`);
-            })
-                .fail(() => reject(new AddressNotFoundError(args)));
-        });
-    },
+ ping(args) {
+     return new Promise((resolve, reject) => {
+         if (args === "") {
+             reject(new AddressIsEmptyError());
+             return;
+         }
 
-    telnet() {
-        return new Promise((_, reject) => {
-            reject(new Error("telnet is unsecure and is deprecated - use ssh instead"));
-        });
-    },
+         $.get(`config/network/${args}/manifest.json`, (serverInfo) => {
+             resolve(`Server ${serverInfo.serverAddress} (${serverInfo.serverName}) can be reached`);
+         })
+         .fail(() => reject(new AddressNotFoundError(args)));
+     });
+ },
 
-    ssh(args) {
-        return new Promise((resolve, reject) => {
-            if (args === "") {
-                reject(new AddressIsEmptyError());
-                return;
-            }
-            let userName = "";
-            let passwd = "";
-            let serverAddress = args[0];
-            if (serverAddress.includes("@")) {
-                const splitted = serverAddress.split("@");
-                if (splitted.length !== 2) {
-                    reject(new InvalidCommandParameter("ssh"));
-                    return;
-                }
-                serverAddress = splitted[1];
-                try {
-                    [userName, passwd] = userPasswordFrom(splitted[0]);
-                } catch (error) {
-                    reject(error);
-                    return;
-                }
-            }
-            kernel.connectToServer(serverAddress, userName, passwd).then(resolve).catch(reject);
-        });
-    }
+ telnet() {
+     return new Promise((_, reject) => {
+         reject(new Error("telnet is unsecure and is deprecated - use ssh instead"));
+     });
+ },
+
+ ssh(args) {
+     return new Promise((resolve, reject) => {
+         if (args === "") {
+             reject(new AddressIsEmptyError());
+             return;
+         }
+         let userName = "";
+         let passwd = "";
+         let serverAddress = args[0];
+         if (serverAddress.includes("@")) {
+             const splitted = serverAddress.split("@");
+             if (splitted.length !== 2) {
+                 reject(new InvalidCommandParameter("ssh"));
+                 return;
+             }
+             serverAddress = splitted[1];
+             try {
+                 [userName, passwd] = userPasswordFrom(splitted[0]);
+             } catch (error) {
+                 reject(error);
+                 return;
+             }
+         }
+         kernel.connectToServer(serverAddress, userName, passwd).then(resolve).catch(reject);
+     });
+ }
 };
-
-
 // ============================
 // helpers
 // ============================
