@@ -368,16 +368,16 @@ system = {
             out.push(`<br>`);
 
             // 只列我们想公开的
-            out.push(`<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执（不可撤回）<br>`);
-            out.push(`<b>crew</b>           - 舰员名册 / 在岗信息（公开）<br>`);
-            out.push(`<b>profile [id]</b>  - 完整人物档案（需权限；不带参数=查看自己）<br>`);
+            out.push(`<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执 <br>`);
+            out.push(`<b>crew</b>           - 舰员名册 / 在岗信息（crew username/usernumber）<br>`);
+            out.push(`<b>profile [id]</b>  - 完整人物档案（profile username）<br>`);
             out.push(`<b>status</b>         - 舰体与战术态势快照<br>`);
             out.push(`<b>login / logout</b> - 登录 / 登出舰载终端<br>`);
             out.push(`<b>clear</b>          - 清屏<br>`);
-            out.push(`<b>help</b>           - 显示本帮助页面<br>`);
+            out.push(`<b>help</b>           - 显示帮助页面<br>`);
 
             out.push(`<br>`);
-            out.push(`<span style="color:#888">注意：部分档案属于 Ω-3 级密级，仅特批舰员可见。</span>`);
+            out.push(`<span style="color:#888">注意：部分档案仅指定舰员可见。</span>`);
             out.push(`</div>`);
 
             resolve(out);
