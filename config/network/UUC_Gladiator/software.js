@@ -272,18 +272,30 @@ function profile(args) {
 // -------------------------------------------------
 // status 指令
 // -------------------------------------------------
-//
-// 战术态势广播 / 舰桥摘要。
-// 允许所有登录舰员查看。
-// visitor 可以看删减版（剧透少一点）。
-//
 function status(args) {
     const me = getCurrentUserId();
-    const lines = [];
 
+    // === 访客模式：直接拒绝访问 ===
+    if (me === "visitor") {
+        return {
+            delayed: 0,
+            clear: false,
+            message: [
+                "<div class='uuc-block'>",
+                "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
+                "此终端处于访客 / 未授权模式。<br>",
+                "舰体战术态势仅授权舰员读取。<br>",
+                "请使用 <b>login</b> 指令验证身份。",
+                "</div>"
+            ]
+        };
+    }
+
+    // === 正常舰员可见内容 ===
+    const lines = [];
     lines.push("<p class='glow' style='font-size:1.1rem'>UUC-GLADIATOR / 战术状态快照</p>");
     lines.push("");
-    lines.push("位置：木星引力井 / 卡利斯托轨道道接近段");
+    lines.push("位置：木星引力井 / 卡利斯托轨道接近段");
     lines.push("对接目标：空间站『交易员』");
     lines.push("状态：静默接近中（公共频谱抑制）");
     lines.push("");
@@ -297,11 +309,6 @@ function status(args) {
     lines.push("外交限制：未经授权的火力展示视为外交破坏。");
     lines.push("");
     lines.push("折纸计划：Ω-3 等级行动为最高优先级。");
-
-    if (me === "visitor") {
-        lines.push("");
-        lines.push("<span style='color:#ff4d4d'>访客模式：</span>部分数据已屏蔽。使用 login 指令以获取完整态势。");
-    }
 
     return {
         delayed: 10,
