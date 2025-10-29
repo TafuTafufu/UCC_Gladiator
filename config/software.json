@@ -1,20 +1,16 @@
 {
-  "demo.exe": {
-    "help": "系统演示程序（保留以确保初始化正常）"
-  },
-  "decrypt": {
-    "help": "ROT13 decode（系统命令保留）"
-  },
-  "identify": {
-    "help": "内部测试程序（保留）"
-  },
-  "acknowledge": {
-    "help": "确认收到Ω-3级折纸计划指令，并回传殖民联邦加密回执。仅限舰员身份使用。"
-  },
   "status": {
-    "help": "显示角斗士号当前的战术/航行/武装状态"
+    "help": "显示角斗士号当前的战术/航行/武装状态",
+    "location": ["UUC_Gladiator"]
   },
+
   "profile": {
-    "help": "查看档案与心理记录。用法：profile 或 profile <名字>（需权限）"
+    "help": "查看档案与心理记录。用法：profile 或 profile <名字>（需权限）",
+    "location": ["UUC_Gladiator"]
+  },
+
+  "acknowledge": {
+    "help": "确认收到Ω-3级折纸计划指令，并回传殖民联邦加密回执。仅限舰员身份使用。",
+    "location": ["UUC_Gladiator"]
   }
 }
