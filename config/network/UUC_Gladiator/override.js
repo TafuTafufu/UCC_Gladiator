@@ -1,46 +1,24 @@
 // ============================
 // override.js FINAL CLEAN
 // ============================
-// 作用：
-// 1. 定义全舰 crewProfiles（public / full）
-// 2. 覆盖 crew() / profile()，加权限
-// 3. 重写 help()，删掉不要的命令
-// 4. 输出时包一层 <div class="uuc-block">，并在运行时注入样式，保证自动换行且不闪烁
+// 功能：
+// 1. 定义 ship 的人物档案 window.crewProfiles
+//    - 每个人包含 public[] 和 full[]
+// 2. 重写 crew() / profile()，并套上权限检查
+//    - crew           => 公共在岗信息 (public)
+//    - profile        => 看自己的 full
+//    - profile <name> => 看别人的 full（要权限）
+// 3. 权限：
+//    - 自己永远能看自己的 full
+//    - diana / andrew: 全舰权限
+//    - vincent: 额外可看 lola
+//    - 其他：只能看自己
+// 4. 重写 help() 成为舰载指令索引
+// 5. 干掉不需要的旧命令 (echo / ssh / telnet / ping / read / date / whoami)
+// 6. 所有输出都放进 <div class="uuc-block"> 里，CSS 只会影响这些块
 // ============================
 
-// ---------- 0. 运行时注入样式（只影响我们输出的块，不影响欢迎界面） ----------
-(function injectUUCStyles() {
-  if (document.getElementById("uuc-style-block")) return;
-  const style = document.createElement("style");
-  style.id = "uuc-style-block";
-  style.textContent = `
-    /* 我们自己的输出外壳 */
-    .uuc-block {
-      max-width: 90vw;
-      line-height: 1.4;
-      white-space: pre-wrap;       /* 保留换行符，但允许长行自动折行 */
-      word-break: break-word;      /* 中文/长英文都能断开 */
-      overflow-wrap: break-word;
-      margin-bottom: 1.2em;
-    }
-
-    /* glow 现在是常亮柔光，不闪烁 */
-    .glow {
-      color: #fff;
-      text-shadow:
-        0 0 4px #fff,
-        0 0 8px #fff,
-        0 0 12px rgba(128,255,128,0.7),
-        0 0 24px rgba(128,255,128,0.4);
-      animation: none !important;
-      -webkit-animation: none !important;
-    }
-  `;
-  document.head.appendChild(style);
-})();
-
-
-// ---------- 1. 舰员完整档案 ----------
+// ---------- 1. 舰员档案 ----------
 window.crewProfiles = {
   damien: {
     img: "damien.jpg",
@@ -97,8 +75,8 @@ HP:16  MP:13
 个人描述：强壮的外表，黑发棕眼。
 思想与信念：别再东躲西藏了，我们应该尽快和敌人干上一仗，早日夺回地球。
 宝贵之物：圣克里斯多福脖子上的链坠，由爷爷传给你的圣遗物。
-特质：训练有素，虽说有时会头脑发热。你生来就拥有成为军人的天赋。无论是为角斗士号护航还是包围敌对目标，每一个任务你都严肃以待。
-职责：操纵角斗士号的电磁轨道炮，发射成簇的电磁加速炸弹。自从不再被频繁投入正面交火后，你受训成为助理工程师，也逐渐在维修工作中找到成就感。
+特质：训练有素，虽有时会头脑发热。你生来就拥有成为军人的天赋。无论是护航还是包围敌对目标，每个任务都极度认真。
+职责：操纵角斗士号的电磁轨道炮，发射成簇的电磁加速炸弹。最近被训练做助理工程师，也逐渐在维修工作中找到成就感。
 难言之隐：你做梦都想着收复地球。你心里知道你是军队里的英雄。这种信念几乎是你全部的精神支撑。`
     ]
   },
@@ -160,7 +138,7 @@ HP:15  MP:16
 宝贵之物：你的工具箱。
 特质：你总觉得任何东西都还能修好。
 职责：损害管制 / 现场抢修 / 验证“折纸计划”硬件真伪，确保拿到的不是陷阱。
-你知道这次交接可能决定殖民联邦的未来。
+压力源：你知道这次交接可能决定殖民联邦的未来。
 难言之隐：你经常梦见雪地与河流的声音，但你从未见过真正的雪。`
     ]
   },
@@ -405,15 +383,14 @@ HP:14  MP:15
 个人描述：尖脸，金色短发，蓝眼睛。
 思想与信念：为了让人类继续活下去，任何代价都可以接受。
 特质：表面礼貌，实则是极度冷静的现实主义者。
-职责：你是殖民联邦的首席交涉人，与“米戈”打交易，拿到折纸计划需要的科研数据。你很清楚那交易在伦理上有多脏。
+职责：你是殖民联邦的首席交涉人，与“米戈”打交易，获取折纸计划需要的科研数据。你很清楚那交易在伦理上有多脏。
 难言之隐：你已经完全接受“如果必须牺牲整艘角斗士号才能让人类存活，那也必须做”。
 恐惧症与狂躁症：你对肉类有强烈的生理排斥。你会梦见在一片冰冷黑暗的地方寻找一个迷路的孩子。`
     ]
   }
 };
 
-
-// ---------- 2. 通用工具 ----------
+// ---------- 2. 工具函数 ----------
 function getCurrentUserId() {
   const raw = localStorage.getItem("loggedUser") || "visitor";
   return raw.toLowerCase();
@@ -440,6 +417,7 @@ function resolveCrewTarget(arg) {
     const idx = parseInt(lower, 10) - 1;
     if (idx >= 0 && idx < list.length) return list[idx];
   }
+
   // crew lola
   return list.find(e => e.id.toLowerCase() === lower) || null;
 }
@@ -447,12 +425,12 @@ function resolveCrewTarget(arg) {
 function canViewFullProfile(requester, target) {
   requester = requester.toLowerCase();
   target = target.toLowerCase();
+
   if (requester === target) return true;
   if (requester === "diana" || requester === "andrew") return true;
   if (requester === "vincent" && target === "lola") return true;
   return false;
 }
-
 
 // ---------- 3. crew() ----------
 function crew(args) {
@@ -474,7 +452,7 @@ function crew(args) {
 
   const list = getCrewArray();
 
-  // crew -> ROSTER
+  // crew -> roster
   if (!args || args.length === 0) {
     const out = [];
     out.push(`<div class="uuc-block">`);
@@ -489,7 +467,7 @@ function crew(args) {
     return { delayed: 0, clear: false, message: out };
   }
 
-  // crew lola / crew 2
+  // crew <id>
   const target = resolveCrewTarget(args[0]);
   if (!target) {
     return {
@@ -511,10 +489,8 @@ function crew(args) {
     ...pubInfo,
     `</div>`
   ];
-
   return { delayed: 0, clear: false, message: out };
 }
-
 
 // ---------- 4. profile() ----------
 function profile(args) {
@@ -537,7 +513,6 @@ function profile(args) {
 
   const targetId = (args && args[0] ? args[0] : me).toLowerCase();
   const record = db[targetId];
-
   if (!record) {
     return {
       delayed: 0,
@@ -575,55 +550,60 @@ function profile(args) {
     ...fullData,
     `</div>`
   ];
-
   return { delayed: 20, clear: false, message: out };
 }
 
+// ---------- 5. 重写 help() ----------
+function newHelp(args) {
+  const out = [];
+  out.push(`<div class="uuc-block">`);
+  out.push("<p class='glow'>[舰载指令索引 / UUC_GLADIATOR]</p>");
+  out.push("");
+  out.push("<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执");
+  out.push("<b>crew</b>           - 舰员名册 / 在岗信息（公开）");
+  out.push("<b>profile [id]</b>  - 完整人物档案（高密级，默认查看自己）");
+  out.push("<b>status</b>         - 舰体 / 战术态势快照");
+  out.push("<b>login / logout</b> - 登录或登出舰载终端");
+  out.push("<b>help</b>           - 显示本索引");
+  out.push("");
+  out.push("<span style='color:#888'>注意：部分档案为 Ω-3 级保密，仅特批舰员可读。</span>");
+  out.push(`</div>`);
 
-// ---------- 5. 覆盖 help() 并清理旧命令 ----------
-(function pruneOldCommandsAndHelp() {
-  const removeList = ["echo", "ssh", "telnet", "ping", "read", "date", "whoami"];
+  return {
+    delayed: 0,
+    clear: false,
+    message: out
+  };
+}
+
+// ---------- 6. 全局注册 ----------
+window.getCurrentUserId = getCurrentUserId;
+window.getCrewArray = getCrewArray;
+window.resolveCrewTarget = resolveCrewTarget;
+window.canViewFullProfile = canViewFullProfile;
+
+window.crew = crew;
+window.profile = profile;
+window.help = newHelp; // ← 重写 help
+
+console.log("%c[override.js 已加载并覆盖旧逻辑]", "color:#80ffaa");
+
+// ---------- 7. 删掉旧命令 ----------
+(function pruneOldCommands() {
+  const removeList = ["echo","ssh","telnet","ping","read","date","whoami"];
 
   removeList.forEach(cmd => {
-    if (window[cmd]) delete window[cmd];
+    if (window[cmd]) {
+      delete window[cmd];
+    }
     if (window.system && window.system.commands && window.system.commands[cmd]) {
       delete window.system.commands[cmd];
     }
   });
 
-  // 新 help
-  window.help = function(args) {
-    const out = [];
-    out.push(`<div class="uuc-block">`);
-    out.push(`<p class='glow' style='font-size:1.1rem'>[舰载指令索引 / UUC_GLADIATOR]</p>`);
-    out.push("");
-    out.push("<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执");
-    out.push("<b>crew</b>           - 舰员名册 / 在岗信息（公开）");
-    out.push("<b>profile [id]</b>  - 人物完整档案（需权限，默认查看自己）");
-    out.push("<b>status</b>         - 舰体与战术态势快照");
-    out.push("<b>login / logout</b> - 登录或登出舰载终端");
-    out.push("<b>help</b>           - 显示此帮助页面");
-    out.push("");
-    out.push("<span style='color:#888'>注意：部分档案为 Ω-3 级保密，仅特批舰员可读。</span>");
-    out.push(`</div>`);
-
-    return {
-      delayed: 0,
-      clear: false,
-      message: out
-    };
-  };
-
-  console.log("%c[override.js] 旧命令已移除 & help() 已重写", "color:#99ccff");
+  console.log(
+    "%c[override.js] 已移除旧命令:",
+    "color:#ffa500",
+    removeList.join(", ")
+  );
 })();
-
-
-// ---------- 6. 挂到全局，给 kernel 用 ----------
-window.getCurrentUserId = getCurrentUserId;
-window.getCrewArray = getCrewArray;
-window.resolveCrewTarget = resolveCrewTarget;
-window.canViewFullProfile = canViewFullProfile;
-window.crew = crew;
-window.profile = profile;
-
-console.log("%c[override.js 已加载并覆盖旧逻辑]", "color:#80ffaa");
