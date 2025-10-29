@@ -181,14 +181,14 @@ function once(_, elem) {
  * ============================
  */
 function kernel(appName, args) {
-    // 先试图让我们自己的指令处理它
-    if (tryRunCustomCommand(appName, args)) {
-        // 我们已经手动 output() 过了
-        // 为了阻止后续报 "command not found"
-        // 这里返回一个成功结束的 Promise
-        return Promise.resolve();
+    // —— Y/N 只有“已登录”时才让自定义命令接管；未登录时让系统报 command not found
+    const isYN = (appName === 'y' || appName === 'n');
+    const isLoggedIn = !!(userDatabase && userDatabase.userId && userDatabase.userId !== 'visitor');
+    if (!isYN || isLoggedIn) {
+        if (tryRunCustomCommand(appName, args)) {
+            return Promise.resolve();
+        }
     }
-
     // 如果不是我们自己的，就走原来的流程
     const program = allowedSoftwares()[appName];
     if (program) {
@@ -362,9 +362,11 @@ system = {
             out.push(`<br>`);
 
             // 只列我们想公开的
-            out.push(`<b>crew</b>           - 舰员名册 / 在岗信息（crew username/usernumber）<br>`);
-            out.push(`<b>profile [id]</b>  - 完整人物档案（profile username）<br>`);
-            out.push(`<b>status</b>         - 舰体与战术态势快照<br>`);
+            out.push(`<b>crew</b>           - 舰员名册 / 在岗信息 <br>`);
+            out.push(`<b>profile [id]</b>   - 完整档案(profile username)<br>`);
+            out.push(`<b>status</b>         - 舰体状态快照<br>`);
+            out.push(`<b>mail</b>           - 邮件<br>`);
+            out.push(`<b>read</b>           - 阅读邮件 (read 0)<br>`);
             out.push(`<b>login / logout</b> - 登录 / 登出舰载终端<br>`);
             out.push(`<b>clear</b>          - 清屏<br>`);
             out.push(`<b>help</b>           - 显示帮助页面<br>`);
