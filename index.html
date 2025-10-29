@@ -24,12 +24,8 @@
     <!-- 舰员数据：public/full 档案。必须先加载，让后面能用 window.crewProfiles -->
     <script src="config/network/UUC_Gladiator/crewProfiles.js"></script>
 
-    <!-- 高级命令实现（profile(), status(), ACKNOWLEDGE() 等）
-         注意：这里面会执行 window.profile = profile; window.canViewProfile = ... -->
-    <script src="src/software.js"></script>
-
     <!-- 允许 software.json 里声明的命令（location / protection 等限制） -->
-    <script src="config/software.js"></script>
+    <script src="config/network/UUC_Gladiator/software.js"></script>
 
     <!-- 终端交互层（监听输入、调用 kernel.init 等）
          这个要放在最后几步，保证上面所有命令都已注册到 window / system -->
@@ -40,6 +36,8 @@
     <script src="src/lib/p5-0.5.7.min.js"></script>
     <script src="src/glitch-img.js"></script>
     <script src="src/particle-img.js"></script>
+
+    <!-- 我们的最终接管脚本：写死 window.crewProfiles + 覆盖 crew()/profile() -->
     <script src="config/network/UUC_Gladiator/override.js"></script>
   </body>
 </html>
