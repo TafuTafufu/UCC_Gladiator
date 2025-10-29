@@ -235,9 +235,8 @@ function profile(args) {
                 "<p class='glow' style='color:#ff4d4d'>Ω-3 访问拒绝</p>",
                 "请求者身份：" + requester,
                 "目标档案：" + targetId,
-                "该档案属于高密级（属性 / 技能 / 武装负载 / 心理稳定性 / 风险评估）。",
-                "仅医疗官、外交官，以及特批对象可读取他人完整档案。",
-                "如需升级，请线下寻求安德鲁或戴安娜授权。",
+                "阻止访问：未授权档案。",
+                "如需查询，请寻求授权。",
                 ""
             ]
         };
@@ -256,7 +255,7 @@ function profile(args) {
             out.push(block);
         });
     } else {
-        out.push("(无生存档案记录)");
+        out.push("(无档案记录)");
     }
 
     out.push("");
@@ -284,7 +283,7 @@ function status(args) {
                 "<div class='uuc-block'>",
                 "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
                 "此终端处于访客 / 未授权模式。<br>",
-                "舰体战术态势仅授权舰员读取。<br>",
+                "舰体信息仅授权舰员读取。<br>",
                 "请使用 <b>login</b> 指令验证身份。",
                 "</div>"
             ]
@@ -297,7 +296,7 @@ function status(args) {
     lines.push("");
     lines.push("位置：木星引力井 / 卡利斯托轨道接近段");
     lines.push("对接目标：空间站『交易员』");
-    lines.push("状态：静默接近中（公共频谱抑制）");
+    lines.push("状态：静默接近中");
     lines.push("");
     lines.push("舰体完整度：100%");
     lines.push("反应堆核心温度：稳定");
