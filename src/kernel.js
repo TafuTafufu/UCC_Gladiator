@@ -438,43 +438,49 @@ system = {
         });
     },
 
-    login(args) {
-        return new Promise((resolve, reject) => {
-            if (!args) {
-                reject(new UsernameIsEmptyError());
-                return;
-            }
-            let userName = "";
-            let passwd = "";
-            try {
-                [userName, passwd] = userPasswordFrom(args[0]);
-            } catch (error) {
-                reject(error);
-                return;
-            }
-            if (!userName) {
-                reject(new UsernameIsEmptyError());
-                return;
-            }
-            const matchingUser = userList.find((user) => user.userId === userName);
-            if (!matchingUser) {
-                reject(new UnknownUserError(userName));
-                return;
-            }
-            if (matchingUser.password && matchingUser.password !== passwd) {
-                reject(new InvalidPasswordError(userName));
-                return;
-            }
-            userDatabase = matchingUser;
+  login(args) {
+    return new Promise((resolve, reject) => {
+        // 这里要同时挡住:
+        // 1) 完全没传参数 (args === undefined)
+        // 2) 传了空数组 (args.length === 0)
+        if (!args || args.length === 0) {
+            reject(new UsernameIsEmptyError());
+            return;
+        }
 
-            // 同步“谁现在登录了”，给 ACKNOWLEDGE / profile / crew 用
-            currentLoggedUserId = userDatabase.userId || "visitor";   // <<< 新增
-            localStorage.setItem("loggedUser", currentLoggedUserId);  // <<< 新增
+        let userName = "";
+        let passwd = "";
+        try {
+            [userName, passwd] = userPasswordFrom(args[0]);
+        } catch (error) {
+            reject(error);
+            return;
+        }
+        if (!userName) {
+            reject(new UsernameIsEmptyError());
+            return;
+        }
 
-            setHeader("Login successful");
-            resolve();
-        });
-    },
+        const matchingUser = userList.find((user) => user.userId === userName);
+        if (!matchingUser) {
+            reject(new UnknownUserError(userName));
+            return;
+        }
+        if (matchingUser.password && matchingUser.password !== passwd) {
+            reject(new InvalidPasswordError(userName));
+            return;
+        }
+
+        userDatabase = matchingUser;
+
+        // 同步“谁现在登录了”
+        currentLoggedUserId = userDatabase.userId || "visitor";
+        localStorage.setItem("loggedUser", currentLoggedUserId);
+
+        setHeader("Login successful");
+        resolve();
+    });
+},
 
     logout() {
         return new Promise(() => {
