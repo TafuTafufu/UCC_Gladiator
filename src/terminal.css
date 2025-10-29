@@ -183,6 +183,7 @@ body {
     clip: rect(86px, 9999px, 100px, 0);
   }
 }
+
 .desync:after {
   content: attr(data-text);
   position: absolute;
@@ -336,6 +337,7 @@ body {
   animation: blur 0.75s ease-out infinite;
   text-shadow: 0px 0px 5px #fff, 0px 0px 7px #fff;
 }
+
 @keyframes blur {
   from {
     text-shadow: 0px 0px 10px #fff, 0px 0px 10px #fff, 0px 0px 25px #fff,
@@ -345,20 +347,24 @@ body {
       0px 10px 100px #7b96b8, 0px 10px 100px #7b96b8, 0px 10px 100px #7b96b8,
       0px -10px 100px #7b96b8, 0px -10px 100px #7b96b8;
   }
+  to {
+    text-shadow: 0px 0px 2px #fff, 0px 0px 4px #fff;
+  }
+}
 
-  /* ---- UUC_Gladiator custom formatting overrides ---- */
+/* ---- UUC_Gladiator custom formatting overrides ---- */
 
-/* 让终端正文里的段落自动换行，而不是无限向右拉 */
+/* 让终端正文里的段落自动换行，而不是无限往右拉爆屏 */
 #container output {
-  white-space: pre-wrap;      /* 保留换行符 \n，但太长的行允许折行 */
-  word-break: break-word;     /* 中文/长单词也会断开换行 */
-  overflow-wrap: break-word;  /* 防止一整行撑爆 */
+  white-space: pre-wrap;      /* 保留 \n，但允许一行太长时自动断行 */
+  word-break: break-word;     /* 中文/长串也能断 */
+  overflow-wrap: break-word;
   max-width: 100%;
   display: block;
   line-height: 1.4;
 }
 
-/* 我们自己的 <p class='glow'> 标题行，也允许换行别挤出屏幕 */
+/* glow 标题也能自动换行，不会撑出超长水平线 */
 #container output .glow {
   white-space: pre-wrap;
   word-break: break-word;
@@ -366,7 +372,8 @@ body {
   display: block;
   line-height: 1.4;
 }
-/* ---- Remove flicker from glow text ---- */
+
+/* ---- 停止闪烁，改成稳定高亮 ---- */
 .glow {
   color: #fff;
   text-shadow:
@@ -376,5 +383,4 @@ body {
     0 0 24px rgba(128,255,128,0.4);
   animation: none !important;
   -webkit-animation: none !important;
-}
 }
