@@ -384,3 +384,44 @@ body {
   animation: none !important;
   -webkit-animation: none !important;
 }
+
+/* ==== UUC_Gladiator custom layout tweaks ==== */
+
+/* 每一条命令的输出我们都包在 <div class="uuc-block"> ... </div> */
+.uuc-block {
+  white-space: pre-wrap;      /* 保留我们字符串里的换行 \n，同时允许长行折行 */
+  word-break: break-word;     /* 中文和超长单词都能断行 */
+  overflow-wrap: break-word;
+  line-height: 1.4;
+  margin-bottom: 1.5em;       /* 块与块之间留一点呼吸空间 */
+  max-width: 100%;
+  display: block;
+  color: #fff;
+  font-family: Inconsolata, monospace;
+  font-size: 11pt;
+}
+
+/* 块内的标题（我们都用 <p class="glow">...）也允许换行并稍微粗一点 */
+.uuc-block .glow {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+  font-weight: normal;
+  display: block;
+  margin: 0 0 .5em 0;
+  font-size: 1.1rem;
+}
+
+/* glow 的视觉：亮但不闪烁 */
+.glow {
+  color: #fff;
+  text-shadow:
+    0 0 4px #fff,
+    0 0 8px #fff,
+    0 0 12px rgba(128,255,128,0.7),
+    0 0 24px rgba(128,255,128,0.4);
+  animation: none !important;
+  -webkit-animation: none !important;
+}
+
