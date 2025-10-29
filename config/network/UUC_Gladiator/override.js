@@ -1,25 +1,46 @@
 // ============================
-// override.js FINAL
+// override.js FINAL CLEAN
 // ============================
 // 作用：
-// 1. 把 window.crewProfiles 覆盖成我们自己的 { public:[], full:[] } 版本
-// 2. 覆盖 crew() / profile() 命令，启用权限系统
-//    - crew         => 公开信息 (public)
-//    - profile      => 自己的 full
-//    - profile <id> => 受限访问 full
-// 3. 权限：
-//    - 自己永远能看自己的 full
-//    - diana / andrew 能看所有人的 full
-//    - vincent 额外能看 lola 的 full
-//    - 其他人只能看自己
+// 1. 定义全舰 crewProfiles（public / full）
+// 2. 覆盖 crew() / profile()，加权限
+// 3. 重写 help()，删掉不要的命令
+// 4. 输出时包一层 <div class="uuc-block">，并在运行时注入样式，保证自动换行且不闪烁
 // ============================
 
-// ---------- 1. 写死全舰档案到 window.crewProfiles ----------
-// 这些内容就是“真相”。我们不再相信旧的 summary/gear/notes 版本。
-// 注意：下面是缩略示例。你要在这里填入完整 public/full 数据，
-// 包含 damien / martin / lola / vincent / diana / andrew。
-// 我先放一个示范，damien 我用你的完整版，其他人我会放我们之前整理过的完整版。
+// ---------- 0. 运行时注入样式（只影响我们输出的块，不影响欢迎界面） ----------
+(function injectUUCStyles() {
+  if (document.getElementById("uuc-style-block")) return;
+  const style = document.createElement("style");
+  style.id = "uuc-style-block";
+  style.textContent = `
+    /* 我们自己的输出外壳 */
+    .uuc-block {
+      max-width: 90vw;
+      line-height: 1.4;
+      white-space: pre-wrap;       /* 保留换行符，但允许长行自动折行 */
+      word-break: break-word;      /* 中文/长英文都能断开 */
+      overflow-wrap: break-word;
+      margin-bottom: 1.2em;
+    }
 
+    /* glow 现在是常亮柔光，不闪烁 */
+    .glow {
+      color: #fff;
+      text-shadow:
+        0 0 4px #fff,
+        0 0 8px #fff,
+        0 0 12px rgba(128,255,128,0.7),
+        0 0 24px rgba(128,255,128,0.4);
+      animation: none !important;
+      -webkit-animation: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+
+// ---------- 1. 舰员完整档案 ----------
 window.crewProfiles = {
   damien: {
     img: "damien.jpg",
@@ -392,183 +413,212 @@ HP:14  MP:15
 };
 
 
-// ---------- 2. 工具函数 ----------
-
+// ---------- 2. 通用工具 ----------
 function getCurrentUserId() {
-    const raw = localStorage.getItem("loggedUser") || "visitor";
-    return raw.toLowerCase();
+  const raw = localStorage.getItem("loggedUser") || "visitor";
+  return raw.toLowerCase();
 }
 
 function getCrewArray() {
-    const order = ["martin", "lola", "vincent", "diana", "andrew", "damien"];
-    const result = [];
-
-    order.forEach(id => {
-        if (window.crewProfiles[id]) {
-            result.push({
-                id,
-                data: window.crewProfiles[id]
-            });
-        }
-    });
-
-    return result;
+  const order = ["martin", "lola", "vincent", "diana", "andrew", "damien"];
+  const out = [];
+  order.forEach(id => {
+    if (window.crewProfiles[id]) {
+      out.push({ id, data: window.crewProfiles[id] });
+    }
+  });
+  return out;
 }
 
 function resolveCrewTarget(arg) {
-    if (!arg) return null;
-    const lower = arg.toLowerCase();
-    const list = getCrewArray();
+  if (!arg) return null;
+  const lower = arg.toLowerCase();
+  const list = getCrewArray();
 
-    if (!isNaN(parseInt(lower, 10))) {
-        const idx = parseInt(lower, 10) - 1;
-        if (idx >= 0 && idx < list.length) {
-            return list[idx];
-        }
-    }
-
-    return list.find(e => e.id.toLowerCase() === lower) || null;
+  // crew 2
+  if (!isNaN(parseInt(lower, 10))) {
+    const idx = parseInt(lower, 10) - 1;
+    if (idx >= 0 && idx < list.length) return list[idx];
+  }
+  // crew lola
+  return list.find(e => e.id.toLowerCase() === lower) || null;
 }
 
 function canViewFullProfile(requester, target) {
-    requester = requester.toLowerCase();
-    target = target.toLowerCase();
-    if (requester === target) return true;
-    if (requester === "diana" || requester === "andrew") return true;
-    if (requester === "vincent" && target === "lola") return true;
-    return false;
+  requester = requester.toLowerCase();
+  target = target.toLowerCase();
+  if (requester === target) return true;
+  if (requester === "diana" || requester === "andrew") return true;
+  if (requester === "vincent" && target === "lola") return true;
+  return false;
 }
 
 
-// ---------- 3. crew() 覆盖 ----------
-
+// ---------- 3. crew() ----------
 function crew(args) {
-    const me = getCurrentUserId();
+  const me = getCurrentUserId();
 
-    if (me === "visitor") {
-        return {
-            delayed: 0,
-            clear: false,
-            message: [
-                `<div class="uuc-block">`,
-                "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
-                "此终端处于访客 / 未授权模式。",
-                "舰员身份验证后可读取舰上在岗信息（crew）。",
-                "",
-                `</div>`
-            ]
-        };
-    }
-
-    const list = getCrewArray();
-
-    if (!args || args.length === 0) {
-        const out = [];
-        out.push(`<div class="uuc-block">`);
-        out.push("<p class='glow'>[CREW ROSTER / 舰内频道]</p>");
-        out.push("");
-        list.forEach((entry, i) => {
-            out.push(`[${i + 1}] ${entry.id}`);
-        });
-        out.push("");
-        out.push("使用 'crew <编号>' 或 'crew <名字>' 查看成员的在岗信息。");
-        out.push(`</div>`);
-        return { delayed: 0, clear: false, message: out };
-    }
-
-    const target = resolveCrewTarget(args[0]);
-    if (!target) {
-        return {
-            delayed: 0,
-            clear: false,
-            message: [
-                `<div class="uuc-block">`,
-                "<p class='glow' style='color:#ff4d4d'>记录不可用</p>",
-                "该身份未在此节点登记。",
-                `</div>`
-            ]
-        };
-    }
-
-    const pubInfo = target.data.public || [];
-    const out = [
+  if (me === "visitor") {
+    return {
+      delayed: 0,
+      clear: false,
+      message: [
         `<div class="uuc-block">`,
-        `<p class='glow'>[在岗信息] ${target.id.toUpperCase()}</p>`,
-        ...pubInfo,
-        "",
+        "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
+        "此终端处于访客 / 未授权模式。",
+        "舰员身份验证后可读取舰上在岗信息（crew）。",
         `</div>`
-    ];
+      ]
+    };
+  }
 
+  const list = getCrewArray();
+
+  // crew -> ROSTER
+  if (!args || args.length === 0) {
+    const out = [];
+    out.push(`<div class="uuc-block">`);
+    out.push("<p class='glow'>[CREW ROSTER / 舰内频道]</p>");
+    out.push("");
+    list.forEach((entry, i) => {
+      out.push(`[${i + 1}] ${entry.id}`);
+    });
+    out.push("");
+    out.push("使用 'crew <编号>' 或 'crew <名字>' 查看该成员的在岗信息。");
+    out.push(`</div>`);
     return { delayed: 0, clear: false, message: out };
-}
+  }
 
-// ---------- 4. profile() 覆盖 ----------
-
-function profile(args) {
-    const me = getCurrentUserId();
-    const db = window.crewProfiles || {};
-
-    if (me === "visitor") {
-        return {
-            delayed: 0,
-            clear: false,
-            message: [
-                `<div class="uuc-block">`,
-                "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
-                "此终端处于访客模式。",
-                "请先使用 login 指令登录舰员身份。",
-                `</div>`
-            ]
-        };
-    }
-
-    const targetId = (args && args[0] ? args[0] : me).toLowerCase();
-    const record = db[targetId];
-
-    if (!record) {
-        return {
-            delayed: 0,
-            clear: false,
-            message: [
-                `<div class="uuc-block">`,
-                "<p class='glow'>档案不可用</p>",
-                "该身份未在此节点登记。",
-                `</div>`
-            ]
-        };
-    }
-
-    if (!canViewFullProfile(me, targetId)) {
-        return {
-            delayed: 0,
-            clear: false,
-            message: [
-                `<div class="uuc-block">`,
-                "<p class='glow' style='color:#ff4d4d'>Ω-3 访问拒绝</p>",
-                "请求者身份: " + me,
-                "目标档案: " + targetId,
-                "该档案属于高密级（心理状态 / 技能 / 风险评估）。",
-                "仅医疗官、外交官，以及特批对象可读取他人完整档案。",
-                "如需升级，请线下寻求安德鲁或戴安娜授权。",
-                `</div>`
-            ]
-        };
-    }
-
-    const fullData = record.full || [];
-    const out = [
+  // crew lola / crew 2
+  const target = resolveCrewTarget(args[0]);
+  if (!target) {
+    return {
+      delayed: 0,
+      clear: false,
+      message: [
         `<div class="uuc-block">`,
-        `<p class='glow' style='font-size:1.1rem'>[生存档案] ${targetId.toUpperCase()}</p>`,
-        ...fullData,
+        "<p class='glow' style='color:#ff4d4d'>记录不可用</p>",
+        "该身份未在此节点登记。",
         `</div>`
-    ];
+      ]
+    };
+  }
 
-    return { delayed: 20, clear: false, message: out };
+  const pubInfo = target.data.public || [];
+  const out = [
+    `<div class="uuc-block">`,
+    `<p class='glow'>[在岗信息] ${target.id.toUpperCase()}</p>`,
+    ...pubInfo,
+    `</div>`
+  ];
+
+  return { delayed: 0, clear: false, message: out };
 }
 
 
-// ---------- 5. 注册到全局 ----------
+// ---------- 4. profile() ----------
+function profile(args) {
+  const me = getCurrentUserId();
+  const db = window.crewProfiles || {};
 
+  if (me === "visitor") {
+    return {
+      delayed: 0,
+      clear: false,
+      message: [
+        `<div class="uuc-block">`,
+        "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
+        "此终端处于访客模式。",
+        "请先使用 login 指令登录舰员身份。",
+        `</div>`
+      ]
+    };
+  }
+
+  const targetId = (args && args[0] ? args[0] : me).toLowerCase();
+  const record = db[targetId];
+
+  if (!record) {
+    return {
+      delayed: 0,
+      clear: false,
+      message: [
+        `<div class="uuc-block">`,
+        "<p class='glow'>档案不可用</p>",
+        "该身份未在此节点登记。",
+        `</div>`
+      ]
+    };
+  }
+
+  if (!canViewFullProfile(me, targetId)) {
+    return {
+      delayed: 0,
+      clear: false,
+      message: [
+        `<div class="uuc-block">`,
+        "<p class='glow' style='color:#ff4d4d'>Ω-3 访问拒绝</p>",
+        "请求者身份: " + me,
+        "目标档案: " + targetId,
+        "该档案属于高密级（心理状态 / 技能 / 风险评估）。",
+        "仅医疗官、外交官，以及特批对象可读取他人完整档案。",
+        "如需升级，请线下寻求安德鲁或戴安娜授权。",
+        `</div>`
+      ]
+    };
+  }
+
+  const fullData = record.full || [];
+  const out = [
+    `<div class="uuc-block">`,
+    `<p class='glow' style='font-size:1.1rem'>[生存档案] ${targetId.toUpperCase()}</p>`,
+    ...fullData,
+    `</div>`
+  ];
+
+  return { delayed: 20, clear: false, message: out };
+}
+
+
+// ---------- 5. 覆盖 help() 并清理旧命令 ----------
+(function pruneOldCommandsAndHelp() {
+  const removeList = ["echo", "ssh", "telnet", "ping", "read", "date", "whoami"];
+
+  removeList.forEach(cmd => {
+    if (window[cmd]) delete window[cmd];
+    if (window.system && window.system.commands && window.system.commands[cmd]) {
+      delete window.system.commands[cmd];
+    }
+  });
+
+  // 新 help
+  window.help = function(args) {
+    const out = [];
+    out.push(`<div class="uuc-block">`);
+    out.push(`<p class='glow' style='font-size:1.1rem'>[舰载指令索引 / UUC_GLADIATOR]</p>`);
+    out.push("");
+    out.push("<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执");
+    out.push("<b>crew</b>           - 舰员名册 / 在岗信息（公开）");
+    out.push("<b>profile [id]</b>  - 人物完整档案（需权限，默认查看自己）");
+    out.push("<b>status</b>         - 舰体与战术态势快照");
+    out.push("<b>login / logout</b> - 登录或登出舰载终端");
+    out.push("<b>help</b>           - 显示此帮助页面");
+    out.push("");
+    out.push("<span style='color:#888'>注意：部分档案为 Ω-3 级保密，仅特批舰员可读。</span>");
+    out.push(`</div>`);
+
+    return {
+      delayed: 0,
+      clear: false,
+      message: out
+    };
+  };
+
+  console.log("%c[override.js] 旧命令已移除 & help() 已重写", "color:#99ccff");
+})();
+
+
+// ---------- 6. 挂到全局，给 kernel 用 ----------
 window.getCurrentUserId = getCurrentUserId;
 window.getCrewArray = getCrewArray;
 window.resolveCrewTarget = resolveCrewTarget;
@@ -577,56 +627,3 @@ window.crew = crew;
 window.profile = profile;
 
 console.log("%c[override.js 已加载并覆盖旧逻辑]", "color:#80ffaa");
-
-// =====================================================
-// 🔒 精简命令系统：移除不需要的旧命令
-// =====================================================
-(function pruneOldCommands() {
-  const removeList = ["echo", "ssh", "telnet", "ping", "read", "date", "whoami"];
-
-  removeList.forEach(cmd => {
-    // 如果这些命令被挂在 window 上，就删掉
-    if (window[cmd]) {
-      delete window[cmd];
-    }
-
-    // 有时它们还存在于系统命令字典（system.commands）中，也清除
-    if (window.system && window.system.commands && window.system.commands[cmd]) {
-      delete window.system.commands[cmd];
-    }
-  });
-
-  console.log("%c[override.js] 已移除旧命令:", "color:#ffa500", removeList.join(", "));
-})();
-
-// ===============================================
-// [舰载指令索引 / UUC_GLADIATOR] 自定义 help 命令
-// ===============================================
-window.help = function(args) {
-  const out = [];
-
-  out.push(`<div class="uuc-block">`);
-  out.push("<p class='glow' style='font-size:1.1rem'>╔════════════════════════════════╗</p>");
-  out.push("<p class='glow' style='font-size:1.1rem'>║  舰载指令索引 / UUC_GLADIATOR   ║</p>");
-  out.push("<p class='glow' style='font-size:1.1rem'>╚════════════════════════════════╝</p>");
-  out.push("");
-  out.push("<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执");
-  out.push("<b>crew</b>           - 舰员名册 / 在岗信息（公开）");
-  out.push("<b>profile [id]</b>  - 人物完整档案（需权限，默认查看自己）");
-  out.push("<b>status</b>         - 舰体与战术态势快照");
-  out.push("<b>login / logout</b> - 登录或登出舰载终端");
-  out.push("<b>help</b>           - 显示此帮助页面");
-  out.push("");
-  out.push("<span style='color:#888'>注意：部分档案为 Ω-3 级保密，仅特批舰员可读。</span>");
-  out.push(`</div>`);
-
-  return {
-    delayed: 0,
-    clear: false,
-    message: out
-  };
-};
-
-console.log("%c[override.js] help() 已重写为舰载索引版本", "color:#99ccff");
-
-
