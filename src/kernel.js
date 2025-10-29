@@ -189,6 +189,11 @@ function once(_, elem) {
  * ============================
  */
 function kernel(appName, args) {
+    // 🔧 尝试直接执行我们定义的自定义命令
+    if (tryRunCustomCommand(appName, args)) {
+        return;
+    }
+
     const program = allowedSoftwares()[appName];
     if (program) {
         return software(appName, program, args);
@@ -643,6 +648,39 @@ function userPasswordFrom(creds) {
         throw new InvalidCredsSyntaxError();
     }
     return splitted;
+}
+// ===== 自定义命令直连执行层 =====
+function tryRunCustomCommand(cmdName, argsArray) {
+  const fn = window[cmdName];
+  if (typeof fn !== "function") {
+    return false; // 没定义，交给系统默认逻辑
+  }
+
+  let result;
+  try {
+    result = fn(argsArray);
+  } catch (e) {
+    result = {
+      delayed: 0,
+      clear: false,
+      message: [
+        `<p style='color:#ff4d4d'>Runtime Error in ${cmdName}()</p>`,
+        String(e)
+      ]
+    };
+  }
+
+  let lines = [];
+  if (result && Array.isArray(result.message)) {
+    lines = result.message;
+  } else if (result && typeof result.message === "string") {
+    lines = [result.message];
+  } else {
+    lines = ["(no output)"];
+  }
+
+  lines.forEach(line => output(line));
+  return true; // 表示我们自己接管了
 }
 
 function runSoftware(progName, program, args) {
