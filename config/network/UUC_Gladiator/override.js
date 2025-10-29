@@ -626,3 +626,41 @@ console.log(
   "%c[override.js] crew/profile/help 已接管，权限/换行/高亮就绪",
   "color:#80ffaa"
 );
+
+// ===== 强制劫持 help & 清理旧命令 (确保真的生效) =====
+(function enforceHelpOverride() {
+  // 1. 确保全局 help 指过去
+  window.help = customHelp;
+
+  // 2. 如果有命令路由表，覆盖里面的 help
+  if (window.system && window.system.commands) {
+    window.system.commands.help    = customHelp;
+    window.system.commands.crew    = crew;
+    window.system.commands.profile = profile;
+
+    // 这里我们把不想公开的都移掉（多加几个稳一点）
+    const removeList = [
+      "echo",
+      "ssh",
+      "telnet",
+      "ping",
+      "read",
+      "date",
+      "whoami",
+      "mail",
+      "history"
+    ];
+
+    removeList.forEach(cmd => {
+      if (window.system.commands[cmd]) {
+        delete window.system.commands[cmd];
+      }
+    });
+  }
+
+  console.log(
+    "%c[override.js] enforceHelpOverride(): help() 已强制指向 customHelp() 并二次清理命令表",
+    "color:#ff99ff"
+  );
+})();
+
