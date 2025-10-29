@@ -566,8 +566,7 @@ function profile(args) {
 
 
 
-// ---------- 5. help() ----------
-
+// ---------- 5. help() (先保留，但不强制接管内核) ----------
 function customHelp(args) {
   const out = [];
 
@@ -594,10 +593,7 @@ function customHelp(args) {
   };
 }
 
-
-
-// ---------- 6. 注册到全局 / 注入系统命令表 / 清理旧命令 ----------
-
+// ---------- 6. 暴露到全局 ----------
 window.getCurrentUserId   = getCurrentUserId;
 window.getCrewArray       = getCrewArray;
 window.resolveCrewTarget  = resolveCrewTarget;
@@ -605,112 +601,12 @@ window.canViewFullProfile = canViewFullProfile;
 
 window.crew    = crew;
 window.profile = profile;
-window.help    = customHelp;
 
-if (window.system && window.system.commands) {
-  // 把我们自己的实现挂进去
-  window.system.commands.crew    = crew;
-  window.system.commands.profile = profile;
-  window.system.commands.help    = customHelp;
-
-  // 这些旧命令从 help 里隐藏
-  const removeList = ["echo","ssh","telnet","ping","read","date","whoami"];
-  removeList.forEach(cmd => {
-    if (window.system.commands[cmd]) {
-      delete window.system.commands[cmd];
-    }
-  });
-}
+// 我们把 customHelp 也挂出来，但暂时不劫持真正的 help
+window.customHelp = customHelp;
 
 console.log(
-  "%c[override.js] crew/profile/help 已接管，权限/换行/高亮就绪",
+  "%c[override.js] crew/profile 已接管，help() 已就绪(未强制接管)",
   "color:#80ffaa"
 );
 
-// ===== 强制劫持 help & 清理旧命令 (确保真的生效) =====
-(function enforceHelpOverride() {
-  // 1. 确保全局 help 指过去
-  window.help = customHelp;
-
-  // 2. 如果有命令路由表，覆盖里面的 help
-  if (window.system && window.system.commands) {
-    window.system.commands.help    = customHelp;
-    window.system.commands.crew    = crew;
-    window.system.commands.profile = profile;
-
-    // 这里我们把不想公开的都移掉（多加几个稳一点）
-    const removeList = [
-      "echo",
-      "ssh",
-      "telnet",
-      "ping",
-      "read",
-      "date",
-      "whoami",
-      "mail",
-      "history"
-    ];
-
-    removeList.forEach(cmd => {
-      if (window.system.commands[cmd]) {
-        delete window.system.commands[cmd];
-      }
-    });
-  }
-
-  console.log(
-    "%c[override.js] enforceHelpOverride(): help() 已强制指向 customHelp() 并二次清理命令表",
-    "color:#ff99ff"
-  );
-})();
-
-(function enforceHelpOverride() {
-  // 1. 确保全局 help 指过去
-  window.help = customHelp;
-
-  // 2. 如果有命令路由表，覆盖里面的 help
-  if (window.system && window.system.commands) {
-    window.system.commands.help    = customHelp;
-    window.system.commands.crew    = crew;
-    window.system.commands.profile = profile;
-
-    const removeList = [
-      "echo","ssh","telnet","ping","read","date","whoami","mail","history"
-    ];
-    removeList.forEach(cmd => {
-      if (window.system.commands[cmd]) {
-        delete window.system.commands[cmd];
-      }
-    });
-  }
-
-  console.log(
-    "%c[override.js] enforceHelpOverride(): help() 已强制指向 customHelp() 并二次清理命令表",
-    "color:#ff99ff"
-  );
-})();
-
-// ===== 第三次钉死 help：劫持 kernel() 的行为 =====
-(function patchKernelForHelp() {
-  if (typeof window.kernel !== "function") {
-    console.warn("[override.js] kernel() 还没就绪，无法patch");
-    return;
-  }
-
-  // 备份原始 kernel
-  const originalKernel = window.kernel;
-
-  // 重写 kernel
-  window.kernel = function(cmd, args) {
-    // 如果是 help，就直接用我们的 customHelp() 生成结果，包一层 Promise 返回
-    if (cmd && cmd.toLowerCase() === "help") {
-      const res = customHelp(args);
-      return Promise.resolve(res);
-    }
-
-    // 其他命令：走老的逻辑
-    return originalKernel(cmd, args);
-  };
-
-  console.log("%c[override.js] kernel() 已被patch，help 走 customHelp()", "color:#ff66ff");
-})();
