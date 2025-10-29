@@ -287,13 +287,13 @@ function status(args) {
     lines.push("对接目标：空间站『交易员』");
     lines.push("状态：静默接近中（公共频谱抑制）");
     lines.push("");
-    lines.push("舰体完整度：94%");
+    lines.push("舰体完整度：100%");
     lines.push("反应堆核心温度：稳定");
-    lines.push("推进姿态控制：手动（K2-PS187 AI 禁止接管）");
-    lines.push("主武器：电磁轨道炮（上膛）");
-    lines.push("副武器：霰弹 2 枚（安全锁定）");
+    lines.push("推进姿态控制：手动");
+    lines.push("主武器：电磁轨道炮");
+    lines.push("副武器：霰弹 2 枚");
     lines.push("");
-    lines.push("火力分配：舰员仅可携带标准制式武装（SMG / 霰弹等），详见 profile。");
+    lines.push("火力分配：舰员仅可携带标准制式武装，详见 profile。");
     lines.push("外交限制：未经授权的火力展示视为外交破坏。");
     lines.push("");
     lines.push("折纸计划：Ω-3 等级行动为最高优先级。");
