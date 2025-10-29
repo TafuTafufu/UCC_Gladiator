@@ -428,15 +428,15 @@ system = {
                  "> crew <编号>",
                  "> crew <名字>",
                  "",
-                 "显示舰上在岗信息（非机密）。",
+                 "显示舰上在岗信息。",
                  "需要已登录任意舰员账号。",
                  "",
                  "示例：",
-                 "  crew           -- 列出花名册",
+                 "  crew           -- 列出名册",
                  "  crew 2         -- 查看编号2的在岗信息",
-                 "  crew lola      -- 查看指定舰员的在岗信息",
+                 "  crew name      -- 查看指定舰员的在岗信息",
                  "",
-                 "若需查看完整人物档案（心理状态 / 风险评估 / 武装详情），请使用 profile 指令（受Ω-3权限限制）。"
+                 "若需查看完整人物档案（详细数据/ 风险评估 / 武装详情），请使用 profile 指令。"
              ]);
          } else if (args[0] in softwareInfo) {
              const customProgram = programs[args[0]];
@@ -585,7 +585,7 @@ system = {
              if (!rec || !rec.public) {
                  return [
                      "<p class='glow' style='color:#ff4d4d'>记录不可用</p>",
-                     "该身份未在此节点的舰上在岗信息登记中。"
+                     "该身份未在此节点登记。"
                  ];
              }
 
@@ -626,7 +626,7 @@ system = {
              } else {
                  resolve([
                      "<p class='glow' style='color:#ff4d4d'>无结果</p>",
-                     "该编号未在当前花名册登记。"
+                     "该编号未登记。"
                  ]);
                  return;
              }
@@ -637,7 +637,7 @@ system = {
          if (!record) {
              resolve([
                  "<p class='glow' style='color:#ff4d4d'>无结果</p>",
-                 "该身份未在舰上在岗登记中。"
+                 "该身份未登记。"
              ]);
              return;
          }
