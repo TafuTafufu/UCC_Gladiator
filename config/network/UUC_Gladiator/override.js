@@ -664,3 +664,53 @@ console.log(
   );
 })();
 
+(function enforceHelpOverride() {
+  // 1. 确保全局 help 指过去
+  window.help = customHelp;
+
+  // 2. 如果有命令路由表，覆盖里面的 help
+  if (window.system && window.system.commands) {
+    window.system.commands.help    = customHelp;
+    window.system.commands.crew    = crew;
+    window.system.commands.profile = profile;
+
+    const removeList = [
+      "echo","ssh","telnet","ping","read","date","whoami","mail","history"
+    ];
+    removeList.forEach(cmd => {
+      if (window.system.commands[cmd]) {
+        delete window.system.commands[cmd];
+      }
+    });
+  }
+
+  console.log(
+    "%c[override.js] enforceHelpOverride(): help() 已强制指向 customHelp() 并二次清理命令表",
+    "color:#ff99ff"
+  );
+})();
+
+// ===== 第三次钉死 help：劫持 kernel() 的行为 =====
+(function patchKernelForHelp() {
+  if (typeof window.kernel !== "function") {
+    console.warn("[override.js] kernel() 还没就绪，无法patch");
+    return;
+  }
+
+  // 备份原始 kernel
+  const originalKernel = window.kernel;
+
+  // 重写 kernel
+  window.kernel = function(cmd, args) {
+    // 如果是 help，就直接用我们的 customHelp() 生成结果，包一层 Promise 返回
+    if (cmd && cmd.toLowerCase() === "help") {
+      const res = customHelp(args);
+      return Promise.resolve(res);
+    }
+
+    // 其他命令：走老的逻辑
+    return originalKernel(cmd, args);
+  };
+
+  console.log("%c[override.js] kernel() 已被patch，help 走 customHelp()", "color:#ff66ff");
+})();
