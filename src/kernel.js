@@ -362,7 +362,6 @@ system = {
             out.push(`<br>`);
 
             // 只列我们想公开的
-            out.push(`<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执 <br>`);
             out.push(`<b>crew</b>           - 舰员名册 / 在岗信息（crew username/usernumber）<br>`);
             out.push(`<b>profile [id]</b>  - 完整人物档案（profile username）<br>`);
             out.push(`<b>status</b>         - 舰体与战术态势快照<br>`);
