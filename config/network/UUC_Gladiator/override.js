@@ -561,3 +561,25 @@ window.crew = crew;
 window.profile = profile;
 
 console.log("%c[override.js 已加载并覆盖旧逻辑]", "color:#80ffaa");
+
+// =====================================================
+// 🔒 精简命令系统：移除不需要的旧命令
+// =====================================================
+(function pruneOldCommands() {
+  const removeList = ["echo", "ssh", "telnet", "ping", "read", "date", "whoami"];
+
+  removeList.forEach(cmd => {
+    // 如果这些命令被挂在 window 上，就删掉
+    if (window[cmd]) {
+      delete window[cmd];
+    }
+
+    // 有时它们还存在于系统命令字典（system.commands）中，也清除
+    if (window.system && window.system.commands && window.system.commands[cmd]) {
+      delete window.system.commands[cmd];
+    }
+  });
+
+  console.log("%c[override.js] 已移除旧命令:", "color:#ffa500", removeList.join(", "));
+})();
+
