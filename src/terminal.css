@@ -1,26 +1,39 @@
+/* ===========================
+   terminal.css (final clean)
+   =========================== */
+
 /* vietnamese */
 @font-face {
   font-family: 'Inconsolata';
   font-style: normal;
   font-weight: 400;
-  src: local('Inconsolata Regular'), local('Inconsolata-Regular'), url(fonts/vietnamese.woff2) format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
+  src: local('Inconsolata Regular'), local('Inconsolata-Regular'),
+       url(fonts/vietnamese.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169,
+                 U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
 }
 /* latin-ext */
 @font-face {
   font-family: 'Inconsolata';
   font-style: normal;
   font-weight: 400;
-  src: local('Inconsolata Regular'), local('Inconsolata-Regular'), url(fonts/latin-ext.woff2) format('woff2');
-  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: local('Inconsolata Regular'), local('Inconsolata-Regular'),
+       url(fonts/latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020,
+                 U+20A0-20AB, U+20AD-20CF, U+2113,
+                 U+2C60-2C7F, U+A720-A7FF;
 }
 /* latin */
 @font-face {
   font-family: 'Inconsolata';
   font-style: normal;
   font-weight: 400;
-  src: local('Inconsolata Regular'), local('Inconsolata-Regular'), url(fonts/latin.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  src: local('Inconsolata Regular'), local('Inconsolata-Regular'),
+       url(fonts/latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC,
+                 U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074,
+                 U+20AC, U+2122, U+2191, U+2193, U+2212,
+                 U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Inconsolata-Bold';
@@ -28,7 +41,6 @@
        url('fonts/inconsolata-bold-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
-
 }
 @font-face {
   font-family: 'Inconsolata-Regular';
@@ -36,11 +48,14 @@
        url('fonts/inconsolata-regular-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
-
 }
+
+/* selection highlight */
 ::selection {
   background: #FF5E99;
 }
+
+/* base layout */
 html, body {
   width: 100%;
   height: 100%;
@@ -49,8 +64,8 @@ html, body {
 body {
   font-size: 11pt;
   font-family: Inconsolata, monospace;
-  color: white;
-  background-color: black;
+  color: #fff;
+  background-color: #000;
 }
 #container {
   padding: .1em 1.5em 1em 1em;
@@ -59,12 +74,11 @@ body {
   clear: both;
   width: 100%;
 }
-#container output h3 {
-  margin: 0;
-}
+#container output h3,
 #container output pre {
   margin: 0;
 }
+
 .input-line {
   display: -webkit-box;
   -webkit-box-orient: horizontal;
@@ -112,78 +126,40 @@ body {
   column-width: 100px;
 }
 
-/* Special FX */
+/* ===========================
+   old glitch / shimmer fx
+   (we'll just leave definitions,
+   but our UI won't actually use
+   them unless you add classes)
+   =========================== */
 
-/* Recipe from: https://codepen.io/lbebber/pen/nqwBKK */
 .desync {
   position: relative;
 }
+/* the noisy glitch animations (kept, but unused by default) */
 @keyframes noise-anim {
-  0% {
-    clip: rect(43px, 9999px, 23px, 0);
-  }
-  5% {
-    clip: rect(80px, 9999px, 23px, 0);
-  }
-  10% {
-    clip: rect(60px, 9999px, 42px, 0);
-  }
-  15% {
-    clip: rect(91px, 9999px, 98px, 0);
-  }
-  20% {
-    clip: rect(45px, 9999px, 9px, 0);
-  }
-  25% {
-    clip: rect(77px, 9999px, 16px, 0);
-  }
-  30% {
-    clip: rect(42px, 9999px, 57px, 0);
-  }
-  35% {
-    clip: rect(11px, 9999px, 14px, 0);
-  }
-  40% {
-    clip: rect(8px, 9999px, 61px, 0);
-  }
-  45% {
-    clip: rect(69px, 9999px, 89px, 0);
-  }
-  50% {
-    clip: rect(73px, 9999px, 52px, 0);
-  }
-  55% {
-    clip: rect(18px, 9999px, 97px, 0);
-  }
-  60% {
-    clip: rect(71px, 9999px, 5px, 0);
-  }
-  65% {
-    clip: rect(28px, 9999px, 97px, 0);
-  }
-  70% {
-    clip: rect(29px, 9999px, 63px, 0);
-  }
-  75% {
-    clip: rect(96px, 9999px, 60px, 0);
-  }
-  80% {
-    clip: rect(9px, 9999px, 83px, 0);
-  }
-  85% {
-    clip: rect(52px, 9999px, 24px, 0);
-  }
-  90% {
-    clip: rect(18px, 9999px, 5px, 0);
-  }
-  95% {
-    clip: rect(24px, 9999px, 20px, 0);
-  }
-  100% {
-    clip: rect(86px, 9999px, 100px, 0);
-  }
+  0%   { clip: rect(43px,9999px,23px,0); }
+  5%   { clip: rect(80px,9999px,23px,0); }
+  10%  { clip: rect(60px,9999px,42px,0); }
+  15%  { clip: rect(91px,9999px,98px,0); }
+  20%  { clip: rect(45px,9999px,9px,0); }
+  25%  { clip: rect(77px,9999px,16px,0); }
+  30%  { clip: rect(42px,9999px,57px,0); }
+  35%  { clip: rect(11px,9999px,14px,0); }
+  40%  { clip: rect(8px,9999px,61px,0); }
+  45%  { clip: rect(69px,9999px,89px,0); }
+  50%  { clip: rect(73px,9999px,52px,0); }
+  55%  { clip: rect(18px,9999px,97px,0); }
+  60%  { clip: rect(71px,9999px,5px,0); }
+  65%  { clip: rect(28px,9999px,97px,0); }
+  70%  { clip: rect(29px,9999px,63px,0); }
+  75%  { clip: rect(96px,9999px,60px,0); }
+  80%  { clip: rect(9px,9999px,83px,0); }
+  85%  { clip: rect(52px,9999px,24px,0); }
+  90%  { clip: rect(18px,9999px,5px,0); }
+  95%  { clip: rect(24px,9999px,20px,0); }
+  100% { clip: rect(86px,9999px,100px,0); }
 }
-
 .desync:after {
   content: attr(data-text);
   position: absolute;
@@ -193,73 +169,31 @@ body {
   color: white;
   background: black;
   overflow: hidden;
-  clip: rect(0, 900px, 0, 0);
+  clip: rect(0,900px,0,0);
   animation: noise-anim 2s infinite linear alternate-reverse;
 }
 @keyframes noise-anim-2 {
-  0% {
-    clip: rect(11px, 9999px, 11px, 0);
-  }
-  5% {
-    clip: rect(52px, 9999px, 78px, 0);
-  }
-  10% {
-    clip: rect(51px, 9999px, 75px, 0);
-  }
-  15% {
-    clip: rect(46px, 9999px, 53px, 0);
-  }
-  20% {
-    clip: rect(28px, 9999px, 48px, 0);
-  }
-  25% {
-    clip: rect(96px, 9999px, 68px, 0);
-  }
-  30% {
-    clip: rect(12px, 9999px, 33px, 0);
-  }
-  35% {
-    clip: rect(8px, 9999px, 74px, 0);
-  }
-  40% {
-    clip: rect(80px, 9999px, 37px, 0);
-  }
-  45% {
-    clip: rect(2px, 9999px, 48px, 0);
-  }
-  50% {
-    clip: rect(32px, 9999px, 39px, 0);
-  }
-  55% {
-    clip: rect(6px, 9999px, 48px, 0);
-  }
-  60% {
-    clip: rect(2px, 9999px, 12px, 0);
-  }
-  65% {
-    clip: rect(1px, 9999px, 24px, 0);
-  }
-  70% {
-    clip: rect(64px, 9999px, 78px, 0);
-  }
-  75% {
-    clip: rect(29px, 9999px, 92px, 0);
-  }
-  80% {
-    clip: rect(8px, 9999px, 66px, 0);
-  }
-  85% {
-    clip: rect(95px, 9999px, 99px, 0);
-  }
-  90% {
-    clip: rect(24px, 9999px, 70px, 0);
-  }
-  95% {
-    clip: rect(35px, 9999px, 64px, 0);
-  }
-  100% {
-    clip: rect(1px, 9999px, 54px, 0);
-  }
+  0%   { clip: rect(11px,9999px,11px,0); }
+  5%   { clip: rect(52px,9999px,78px,0); }
+  10%  { clip: rect(51px,9999px,75px,0); }
+  15%  { clip: rect(46px,9999px,53px,0); }
+  20%  { clip: rect(28px,9999px,48px,0); }
+  25%  { clip: rect(96px,9999px,68px,0); }
+  30%  { clip: rect(12px,9999px,33px,0); }
+  35%  { clip: rect(8px,9999px,74px,0); }
+  40%  { clip: rect(80px,9999px,37px,0); }
+  45%  { clip: rect(2px,9999px,48px,0); }
+  50%  { clip: rect(32px,9999px,39px,0); }
+  55%  { clip: rect(6px,9999px,48px,0); }
+  60%  { clip: rect(2px,9999px,12px,0); }
+  65%  { clip: rect(1px,9999px,24px,0); }
+  70%  { clip: rect(64px,9999px,78px,0); }
+  75%  { clip: rect(29px,9999px,92px,0); }
+  80%  { clip: rect(8px,9999px,66px,0); }
+  85%  { clip: rect(95px,9999px,99px,0); }
+  90%  { clip: rect(24px,9999px,70px,0); }
+  95%  { clip: rect(35px,9999px,64px,0); }
+  100% { clip: rect(1px,9999px,54px,0); }
 }
 .desync:before {
   content: attr(data-text);
@@ -270,130 +204,58 @@ body {
   color: white;
   background: black;
   overflow: hidden;
-  clip: rect(0, 900px, 0, 0);
+  clip: rect(0,900px,0,0);
   animation: noise-anim-2 3s infinite linear alternate-reverse;
 }
 
-/* Recipe from: https://codepen.io/redouglas/pen/oNgqxV */
+/* shimmer (kept, unused unless you add .shimmer) */
 .shimmer {
-  color: rgba(255, 255, 255, 0.4);
-  background: -webkit-gradient(linear, left top, right top, from(#222), to(#222), color-stop(0.5, #fff));
-  background: -moz-gradient(linear, left top, right top, from(#222), to(#222), color-stop(0.5, #fff));
-  background: gradient(linear, left top, right top, from(#222), to(#222), color-stop(0.5, #fff));
-  -webkit-background-size: 125px 100%;
-  -moz-background-size: 125px 100%;
-  background-size: 125px 100%;
-  -webkit-background-clip: text;
-  -moz-background-clip: text;
-  background-clip: text;
-  -webkit-animation-name: shimmer;
-  -moz-animation-name: shimmer;
+  color: rgba(255,255,255,0.4);
+  background: -webkit-gradient(linear,left top,right top,
+              from(#222),to(#222),color-stop(0.5,#fff));
+  background: -moz-gradient(linear,left top,right top,
+              from(#222),to(#222),color-stop(0.5,#fff));
+  background: gradient(linear,left top,right top,
+              from(#222),to(#222),color-stop(0.5,#fff));
+  -webkit-background-size:125px 100%;
+  -moz-background-size:125px 100%;
+  background-size:125px 100%;
+  -webkit-background-clip:text;
+  -moz-background-clip:text;
+  background-clip:text;
+  background-repeat:no-repeat;
+  background-position:0 0;
+  background-color:#222;
   animation-name: shimmer;
-  -webkit-animation-duration: 2s;
-  -moz-animation-duration: 2s;
-  animation-duration: 2s;
-  -webkit-animation-iteration-count: infinite;
-  -moz-animation-iteration-count: infinite;
+  animation-duration:2s;
   animation-iteration-count: infinite;
-  background-repeat: no-repeat;
-  background-position: 0 0;
-  background-color: #222;
-}
-@-moz-keyframes shimmer {
-  0% {
-    background-position: top left;
-  }
-  100% {
-    background-position: top right;
-  }
-}
-@-webkit-keyframes shimmer {
-  0% {
-    background-position: top left;
-  }
-  100% {
-    background-position: top right;
-  }
-}
-@-o-keyframes shimmer {
-  0% {
-    background-position: top left;
-  }
-  100% {
-    background-position: top right;
-  }
 }
 @keyframes shimmer {
-  0% {
-    background-position: top left;
-  }
-  100% {
-    background-position: top right;
-  }
+  0%   { background-position: top left; }
+  100% { background-position: top right; }
 }
 
-/* Recipe from: https://codepen.io/moklick/pen/nPZKXM */
-.glow {
-  animation: blur 0.75s ease-out infinite;
-  text-shadow: 0px 0px 5px #fff, 0px 0px 7px #fff;
-}
+/* ===========================
+   GLOW (we override it below)
+   =========================== */
 
-@keyframes blur {
-  from {
-    text-shadow: 0px 0px 10px #fff, 0px 0px 10px #fff, 0px 0px 25px #fff,
-      0px 0px 25px #fff, 0px 0px 25px #fff, 0px 0px 25px #fff, 0px 0px 25px #fff,
-      0px 0px 25px #fff, 0px 0px 50px #fff, 0px 0px 50px #fff,
-      0px 0px 50px #7b96b8, 0px 0px 150px #7b96b8, 0px 10px 100px #7b96b8,
-      0px 10px 100px #7b96b8, 0px 10px 100px #7b96b8, 0px 10px 100px #7b96b8,
-      0px -10px 100px #7b96b8, 0px -10px 100px #7b96b8;
-  }
-  to {
-    text-shadow: 0px 0px 2px #fff, 0px 0px 4px #fff;
-  }
-}
+/* we'll redefine .glow later to STOP flicker */
 
-/* ---- UUC_Gladiator custom formatting overrides ---- */
 
-/* 让终端正文里的段落自动换行，而不是无限往右拉爆屏 */
-/* 仅对我们自己生成的战术输出块做易读排版，不影响欢迎横幅 */
-#container output .uuc-block {
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.4;
-  max-width: 100%;
-  display: block;
-}
+/* ===========================
+   OUR OVERRIDES FOR UUC_GLADIATOR
+   readable blocks / no flicker
+   =========================== */
 
-#container output .uuc-block .glow {
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.4;
-  display: block;
-}
-
-/* ---- 停止闪烁，改成稳定高亮 ---- */
-.glow {
-  color: #fff;
-  text-shadow:
-    0 0 4px #fff,
-    0 0 8px #fff,
-    0 0 12px rgba(128,255,128,0.7),
-    0 0 24px rgba(128,255,128,0.4);
-  animation: none !important;
-  -webkit-animation: none !important;
-}
-
-/* ==== UUC_Gladiator custom layout tweaks ==== */
-
-/* 每一条命令的输出我们都包在 <div class="uuc-block"> ... </div> */
+/* every command output we generate is wrapped in:
+   <div class="uuc-block"> ... </div>
+   give it breathing room, auto-wrap, etc */
 .uuc-block {
-  white-space: pre-wrap;      /* 保留我们字符串里的换行 \n，同时允许长行折行 */
-  word-break: break-word;     /* 中文和超长单词都能断行 */
+  white-space: pre-wrap;      /* keep \n as line breaks */
+  word-break: break-word;     /* break long words / CJK */
   overflow-wrap: break-word;
   line-height: 1.4;
-  margin-bottom: 1.5em;       /* 块与块之间留一点呼吸空间 */
+  margin-bottom: 1.5em;       /* space between blocks */
   max-width: 100%;
   display: block;
   color: #fff;
@@ -401,19 +263,21 @@ body {
   font-size: 11pt;
 }
 
-/* 块内的标题（我们都用 <p class="glow">...）也允许换行并稍微粗一点 */
+/* block titles we print as <p class="glow">[...]</p> */
 .uuc-block .glow {
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.4;
-  font-weight: normal;
   display: block;
   margin: 0 0 .5em 0;
   font-size: 1.1rem;
+  line-height: 1.4;
+  font-weight: normal;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
-/* glow 的视觉：亮但不闪烁 */
+/* FINAL glow style:
+   - bright neon-ish text
+   - NO animation/flicker */
 .glow {
   color: #fff;
   text-shadow:
@@ -424,4 +288,3 @@ body {
   animation: none !important;
   -webkit-animation: none !important;
 }
-
