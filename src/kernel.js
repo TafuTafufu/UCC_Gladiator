@@ -363,7 +363,7 @@ system = {
 
             out.push(`<div class="uuc-block">`);
             out.push(`<p class="glow" style="font-size:1.1rem">╔════════════════════════════════╗</p>`);
-            out.push(`<p class="glow" style="font-size:1.1rem">║   舰载指令索引 / UUC_GLADIATOR  ║ </p>`);
+            out.push(`<p class="glow" style="font-size:1.1rem">║   舰载指令索引 / UUC_GLADIATOR&nbsp;║ </p>`);
             out.push(`<p class="glow" style="font-size:1.1rem">╚════════════════════════════════╝</p>`);
             out.push(`<br>`);
 
