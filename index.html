@@ -11,16 +11,25 @@
     <div id="container">
       <output></output>
       <div id="input-line" class="input-line">
-        <div class="prompt"></div><div><input class="cmdline" autofocus /></div>
+        <div class="prompt"></div>
+        <div><input class="cmdline" autofocus /></div>
       </div>
     </div>
+
+    <!-- 核心库 -->
     <script src="src/lib/jquery-2.1.1.min.js"></script>
     <script src="src/error.js"></script>
     <script src="src/kernel.js"></script>
     <script src="src/terminal.js"></script>
+
+    <!-- ✅ 新增：加载人物档案（必须在 software.js 之前） -->
+    <script src="config/crewProfiles.js"></script>
+
+    <!-- 自定义命令逻辑 -->
     <script src="config/software.js"></script>
+
+    <!-- 视觉特效脚本 -->
     <script src="src/hack-reveal.js"></script>
-    <!-- This dependency is only needed for glitch-img.js, so load it last: -->
     <script src="src/lib/p5-0.5.7.min.js"></script>
     <script src="src/glitch-img.js"></script>
     <script src="src/particle-img.js"></script>
