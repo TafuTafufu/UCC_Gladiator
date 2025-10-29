@@ -1,28 +1,24 @@
 // ============================
-// override.js
-// ============================
-// 覆盖旧版 profile / crew 逻辑
-// 采用新的 public / full + 权限控制结构
+// override.js （修订最终版）
 // ============================
 
-// --------------- 工具函数 ---------------
-
+// ---------- 工具 ----------
 function getCurrentUserId() {
     const raw = localStorage.getItem("loggedUser") || "visitor";
     return raw.toLowerCase();
 }
 
 function getCrewArray() {
+    // 用我们想要的顺序展示
     const order = ["martin", "lola", "vincent", "diana", "andrew", "damien"];
     const result = [];
-
     if (!window.crewProfiles) return result;
 
     order.forEach(id => {
         if (window.crewProfiles[id]) {
             result.push({
-                id: id,
-                data: window.crewProfiles[id]
+                id,
+                data: window.crewProfiles[id]   // 这里期望 { public:[...], full:[...] }
             });
         }
     });
@@ -35,6 +31,7 @@ function resolveCrewTarget(arg) {
     const lower = arg.toLowerCase();
     const list = getCrewArray();
 
+    // 数字索引
     if (!isNaN(parseInt(lower, 10))) {
         const idx = parseInt(lower, 10) - 1;
         if (idx >= 0 && idx < list.length) {
@@ -42,9 +39,11 @@ function resolveCrewTarget(arg) {
         }
     }
 
-    return list.find(entry => entry.id.toLowerCase() === lower) || null;
+    // 名字索引
+    return list.find(e => e.id.toLowerCase() === lower) || null;
 }
 
+// 权限：谁能看谁的 full
 function canViewFullProfile(requester, target) {
     requester = requester.toLowerCase();
     target = target.toLowerCase();
@@ -54,8 +53,9 @@ function canViewFullProfile(requester, target) {
     return false;
 }
 
-// --------------- 覆盖 crew 命令 ---------------
-
+// ---------- crew 覆盖 ----------
+// crew            -> 列 roster
+// crew lola / 2   -> 公开信息 (public)
 function crew(args) {
     const me = getCurrentUserId();
 
@@ -73,18 +73,20 @@ function crew(args) {
 
     const list = getCrewArray();
 
-    // 没参数：打印花名册
+    // 没参数：显示 roster
     if (!args || args.length === 0) {
         const out = [];
         out.push("<p class='glow'>[CREW ROSTER / 舰内频道]</p>");
         out.push("");
-        list.forEach((entry, i) => out.push(`[${i + 1}] ${entry.id}`));
+        list.forEach((entry, i) => {
+            out.push(`[${i + 1}] ${entry.id}`);
+        });
         out.push("");
-        out.push("使用 'crew <编号>' 或 'crew <名字>' 查看成员在岗信息。");
+        out.push("使用 'crew <编号>' 或 'crew <名字>' 查看成员的在岗信息。");
         return { delayed: 0, clear: false, message: out };
     }
 
-    // 有参数
+    // 指定成员
     const target = resolveCrewTarget(args[0]);
     if (!target) {
         return {
@@ -98,12 +100,18 @@ function crew(args) {
     }
 
     const pubInfo = target.data.public || [];
-    const out = [`<p class='glow'>[在岗信息] ${target.id.toUpperCase()}</p>`, ...pubInfo, ""];
+    const out = [
+        `<p class='glow'>[在岗信息] ${target.id.toUpperCase()}</p>`,
+        ...pubInfo,
+        ""
+    ];
+
     return { delayed: 0, clear: false, message: out };
 }
 
-// --------------- 覆盖 profile 命令 ---------------
-
+// ---------- profile 覆盖 ----------
+// profile           -> 看自己的 full
+// profile lola      -> 按权限看别人的 full
 function profile(args) {
     const me = getCurrentUserId();
     const db = window.crewProfiles || {};
@@ -150,12 +158,15 @@ function profile(args) {
     }
 
     const fullData = record.full || [];
-    const out = [`<p class='glow' style='font-size:1.1rem'>[生存档案] ${targetId.toUpperCase()}</p>`, ...fullData];
+    const out = [
+        `<p class='glow' style='font-size:1.1rem'>[生存档案] ${targetId.toUpperCase()}</p>`,
+        ...fullData
+    ];
+
     return { delayed: 20, clear: false, message: out };
 }
 
-// --------------- 注册全局 ---------------
-
+// ---------- 挂到 window ----------
 window.getCurrentUserId = getCurrentUserId;
 window.getCrewArray = getCrewArray;
 window.resolveCrewTarget = resolveCrewTarget;
