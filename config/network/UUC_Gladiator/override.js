@@ -450,9 +450,12 @@ function crew(args) {
             delayed: 0,
             clear: false,
             message: [
+                `<div class="uuc-block">`,
                 "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
-                "该终端处于访客模式，无法读取船员名册。",
-                ""
+                "此终端处于访客 / 未授权模式。",
+                "舰员身份验证后可读取舰上在岗信息（crew）。",
+                "",
+                `</div>`
             ]
         };
     }
@@ -461,6 +464,7 @@ function crew(args) {
 
     if (!args || args.length === 0) {
         const out = [];
+        out.push(`<div class="uuc-block">`);
         out.push("<p class='glow'>[CREW ROSTER / 舰内频道]</p>");
         out.push("");
         list.forEach((entry, i) => {
@@ -468,6 +472,7 @@ function crew(args) {
         });
         out.push("");
         out.push("使用 'crew <编号>' 或 'crew <名字>' 查看成员的在岗信息。");
+        out.push(`</div>`);
         return { delayed: 0, clear: false, message: out };
     }
 
@@ -477,22 +482,25 @@ function crew(args) {
             delayed: 0,
             clear: false,
             message: [
+                `<div class="uuc-block">`,
                 "<p class='glow' style='color:#ff4d4d'>记录不可用</p>",
-                "该身份未在此节点登记。"
+                "该身份未在此节点登记。",
+                `</div>`
             ]
         };
     }
 
     const pubInfo = target.data.public || [];
     const out = [
+        `<div class="uuc-block">`,
         `<p class='glow'>[在岗信息] ${target.id.toUpperCase()}</p>`,
         ...pubInfo,
-        ""
+        "",
+        `</div>`
     ];
 
     return { delayed: 0, clear: false, message: out };
 }
-
 
 // ---------- 4. profile() 覆盖 ----------
 
@@ -505,9 +513,11 @@ function profile(args) {
             delayed: 0,
             clear: false,
             message: [
+                `<div class="uuc-block">`,
                 "<p class='glow' style='color:#ff4d4d'>访问拒绝</p>",
                 "此终端处于访客模式。",
-                "请先使用 login 指令登录舰员身份。"
+                "请先使用 login 指令登录舰员身份。",
+                `</div>`
             ]
         };
     }
@@ -520,8 +530,10 @@ function profile(args) {
             delayed: 0,
             clear: false,
             message: [
+                `<div class="uuc-block">`,
                 "<p class='glow'>档案不可用</p>",
-                "该身份未在此节点登记。"
+                "该身份未在此节点登记。",
+                `</div>`
             ]
         };
     }
@@ -531,20 +543,24 @@ function profile(args) {
             delayed: 0,
             clear: false,
             message: [
+                `<div class="uuc-block">`,
                 "<p class='glow' style='color:#ff4d4d'>Ω-3 访问拒绝</p>",
                 "请求者身份: " + me,
                 "目标档案: " + targetId,
                 "该档案属于高密级（心理状态 / 技能 / 风险评估）。",
                 "仅医疗官、外交官，以及特批对象可读取他人完整档案。",
-                "如需升级，请线下寻求安德鲁或戴安娜授权。"
+                "如需升级，请线下寻求安德鲁或戴安娜授权。",
+                `</div>`
             ]
         };
     }
 
     const fullData = record.full || [];
     const out = [
+        `<div class="uuc-block">`,
         `<p class='glow' style='font-size:1.1rem'>[生存档案] ${targetId.toUpperCase()}</p>`,
-        ...fullData
+        ...fullData,
+        `</div>`
     ];
 
     return { delayed: 20, clear: false, message: out };
@@ -582,4 +598,29 @@ console.log("%c[override.js 已加载并覆盖旧逻辑]", "color:#80ffaa");
 
   console.log("%c[override.js] 已移除旧命令:", "color:#ffa500", removeList.join(", "));
 })();
+
+window.help = function(args) {
+  const out = [];
+
+  out.push(`<div class="uuc-block">`);
+  out.push("<p class='glow' style='font-size:1.1rem'>╔════════════════════════════════╗</p>");
+  out.push("<p class='glow' style='font-size:1.1rem'>║  舰载指令索引 / UUC_GLADIATOR  ║</p>");
+  out.push("<p class='glow' style='font-size:1.1rem'>╚════════════════════════════════╝</p>");
+  out.push("");
+  out.push("<b>acknowledge</b>    - 确认并回传 Ω-3 指令回执");
+  out.push("<b>crew</b>           - 舰员名册 / 在岗信息（公开）");
+  out.push("<b>profile [id]</b>  - 人物完整档案（需权限，默认查看自己）");
+  out.push("<b>status</b>         - 舰体与战术态势快照");
+  out.push("<b>login / logout</b> - 登录或登出舰载终端");
+  out.push("<b>help</b>           - 显示此帮助页面");
+  out.push("");
+  out.push("<span style='color:#888'>注意：部分档案为 Ω-3 级保密，仅特批舰员可读。</span>");
+  out.push(`</div>`);
+
+  return {
+    delayed: 0,
+    clear: false,
+    message: out
+  };
+};
 
