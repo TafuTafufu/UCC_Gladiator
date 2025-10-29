@@ -439,37 +439,44 @@ system = {
         });
     },
 
-    mail() {
-        return new Promise((resolve, reject) => {
-            const messageList = mailList
-                .filter((mail) => mail.to.includes(userDatabase.userId))
-                .map((mail, i) => `[${i}] ${mail.title}`);
-            if (messageList.length === 0) {
-                reject(new MailServerIsEmptyError());
-                return;
-            }
-            resolve(messageList);
-        });
-    },
+   mail() {
+  return new Promise((resolve, reject) => {
+    const visible = (mailList || []).filter(
+      (m) => Array.isArray(m.to) && m.to.includes(userDatabase.userId)
+    );
+    const messageList = visible.map((mail, i) => `[${i}] ${mail.title}`);
+    if (messageList.length === 0) {
+      reject(new MailServerIsEmptyError());
+      return;
+    }
+    resolve(messageList);
+  });
+},
 
-    read(args) {
-        return new Promise((resolve, reject) => {
-            const mailIndex = Number(args[0]);
-            const messageList = mailList.filter((mail) => mail.to.includes(userDatabase.userId));
-            const mailAtIndex = messageList[mailIndex];
-            if (!mailAtIndex || !mailAtIndex.to.includes(userDatabase.userId)) {
-                reject(new InvalidMessageKeyError());
-                return;
-            }
-            let message = [];
-            message.push("---------------------------------------------");
-            message.push(`From: ${mailAtIndex.from}`);
-            message.push(`To: ${userDatabase.userId}@${serverDatabase.terminalID}`);
-            message.push("---------------------------------------------");
-            message = [...message, ...mailAtIndex.body.split("  ")];
-            resolve(message);
-        });
-    },
+   read(args) {
+  return new Promise((resolve, reject) => {
+    const idx = Number(args && args[0]);
+    const visible = (mailList || []).filter(
+      (m) => Array.isArray(m.to) && m.to.includes(userDatabase.userId)
+    );
+    const mailAtIndex = visible[idx];
+
+    if (!Number.isInteger(idx) || !mailAtIndex) {
+      reject(new InvalidMessageKeyError());
+      return;
+    }
+
+    // 按行渲染：把 \n 切成多行（不会动 kernel 的其他部分）
+    const lines = [];
+    lines.push("---------------------------------------------");
+    lines.push(`From: ${mailAtIndex.from}`);
+    lines.push(`To: ${userDatabase.userId}@${serverDatabase.terminalID}`);
+    lines.push("---------------------------------------------");
+    lines.push(...String(mailAtIndex.body).split("\n"));
+
+    resolve(lines);
+  });
+},
 
     // ============================
     // crew：列在岗信息（公共舰内信息）
