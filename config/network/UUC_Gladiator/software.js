@@ -1,17 +1,11 @@
-/* 角斗士号自定义启动脚本 (localhost 节点专用)
-   功能：
-   1. 注入船员账号（给 login 用）
-   2. 跟踪当前登录用户到 localStorage.loggedUser
-   3. 定义战术工具命令：
-      - ACKNOWLEDGE  回传折纸计划回执（需要舰员权限）
-      - status       查看角斗士号当前战术/航行/武装状态
-      - profile      查看档案 / 装备 / 心理记录（带权限规则）
+/* UUC Gladiator custom script
+   - 注入船员账号
+   - 接管 login() 并记录 loggedUser
+   - 定义命令: status / profile / ACKNOWLEDGE
 */
 
-/* =========================
-   启动时：注入可登录账号
-   ========================= */
-(function bootstrapCrewUsers() {
+// =============== 启动：注入账号 ===============
+(function initUsers() {
   const crewUsers = [
     { userId: "martin",  password: "snowriver",     userName: "马丁·史密斯 / 角斗士号机械师" },
     { userId: "lola",    password: "virtequal",     userName: "萝拉·沃伊特 / 驾驶员&虚拟造梦者" },
@@ -21,7 +15,6 @@
     { userId: "damien",  password: "takeearthback", userName: "达米恩·冈恩 / 炮手&安保" }
   ];
 
-  // 把船员账号写进 localStorage，伪装成“服务器用户数据库”
   const possibleKeys = [
     "UUC_Gladiator_users",
     "UUC_Gladiator_userlist",
@@ -35,32 +28,24 @@
     possibleKeys.forEach(k => {
       localStorage.setItem(k, JSON.stringify(crewUsers));
     });
-    console.log("[UUC_Gladiator bootstrap] crew users injected.");
   } catch (e) {
     console.warn("[UUC_Gladiator bootstrap] failed to inject users:", e);
   }
 
-  // 初始化当前登录用户（默认 visitor = 未授权访客）
-const logged = localStorage.getItem("loggedUser");
-if (logged && logged !== "visitor") {
-    output(`欢迎回来，${logged}`);
-}
+  if (!localStorage.getItem("loggedUser")) {
+    localStorage.setItem("loggedUser", "visitor");
+  }
 })();
 
-/* =========================
-   login 包装：
-   - 仍然调用原来的 login
-   - 如果原 login 判定成功，则写入 loggedUser
-   ========================= */
+// =============== login 包装 ===============
 const _originalLogin = window.login;
-
 function login(args) {
-  const rawCred = args && args[0] ? args[0] : "";
+  const rawCred  = args && args[0] ? args[0] : "";
   const username = rawCred.split(":")[0] || "";
 
   let result;
   if (typeof _originalLogin === "function") {
-    result = _originalLogin(args); // 跑原版逻辑
+    result = _originalLogin(args);
   } else {
     result = { message: ["login command not available"] };
   }
@@ -71,17 +56,14 @@ function login(args) {
 
   if (textBlock.includes("Login successful") && username) {
     localStorage.setItem("loggedUser", username);
-    console.log("[UUC_Gladiator] loggedUser set to", username);
+    console.log("[UUC_Gladiator] loggedUser =", username);
   }
 
   return result;
 }
-
 window.login = login;
 
-/* =========================
-   舰船状态数据 + status 命令
-   ========================= */
+// =============== status 命令 ===============
 function status() {
   return {
     delayed: 30,
@@ -105,141 +87,19 @@ function status() {
     ]
   };
 }
+window.status = status;
 
-/* =========================
-   舰员档案数据库（基于人物卡）
-   summary = 我是谁 / 职责
-   gear    = 我携带/可支配的装备
-   notes   = 心理、危险信号、敏感信息
-   ========================= */
-const crewProfiles = {
-  martin: {
-    summary: [
-      "马丁·史密斯 / 角斗士号机械师 / 36岁 男",
-      "随航机械工程师。几乎能把整艘船拆了再装回去，专长是损害管制与现场抢修。",
-      "负责验证交接技术文件和组件真伪，确保折纸计划用到的东西不是陷阱。"
-    ],
-    gear: [
-      "武器：科尼尔E-1电子手枪，格洛克23（常规+穿甲弹夹）",
-      "防护：联邦制服（2护甲），重型真空作业服（12护甲）",
-      "随身：PDA个人终端，科技扫描仪，工具箱，维修工具，背式推进器，应急泡沫密封胶"
-    ],
-    notes: [
-      "性格：疲惫但可靠，仍然觉得‘也许我们能修好一切’。",
-      "压力：知道这次交接成败可能决定殖民联邦还有没有未来。",
-      "梦境：关于雪和流水的梦，虽然我从没在现实看过真正的雪。"
-    ]
-  },
-
-  lola: {
-    summary: [
-      "萝拉·沃伊特 / 驾驶员 & 虚拟造梦者 / 19岁 女",
-      "角斗士号的驾驶员与‘虚拟造梦者’接口，能长时间直接接入高阶系统并稳定他人心智。",
-      "我是飞船的第二大脑。"
-    ],
-    gear: [
-      "武器：科尼尔E-1电子手枪，Skorpion SMG（常规+穿甲弹夹）",
-      "防护：联邦制服（2护甲），重型真空作业服（12护甲）",
-      "随身：PDA，科技扫描仪，背式推进器，45天量虚拟稳定剂（VirtEqual）"
-    ],
-    notes: [
-      "药物依赖：VirtEqual。停药几天内就会精神崩坏。",
-      "心理倾向：喜欢被明确指挥，‘告诉我该做什么，我就不会犯错’。",
-      "睡眠：噩梦多，梦到火光和尖叫。几乎没有安眠。"
-    ]
-  },
-
-  vincent: {
-    summary: [
-      "文森特·戴尔加图 / 情报官 & 黑客 / 28岁 男",
-      "专职入侵/渗透。13岁因黑入殖民网络被抓，此后被改造成‘编制内工具人’。",
-      "确保我们走进陷阱之前，先把陷阱拆了。"
-    ],
-    gear: [
-      "武器：科尼尔E-1电子手枪，格洛克23，.10口径霰弹枪",
-      "防护：联邦制服（2护甲），重型真空作业服（12护甲）",
-      "随身：PDA，科技扫描仪"
-    ],
-    notes: [
-      "情感记录：曾给萝拉写过一只虚拟宠物狗。我非常在意她。",
-      "心理风险：反复梦到‘被发现就会死’的场景，强烈的被猎杀感。",
-      "信条：世界上没有真正安全的系统。"
-    ]
-  },
-
-  diana: {
-    summary: [
-      "戴安娜·埃弗里特 / 医疗官 / 35岁 女",
-      "全舰医疗与心理维稳负责人。‘从未丢过任何一个船员’。",
-      "我会定期评估高风险成员的心理状态，不管他们愿不愿意。"
-    ],
-    gear: [
-      "武器：科尼尔E-1电子手枪，格洛克23，科尼尔E-2电子步枪",
-      "防护：联邦制服（2护甲），重型真空作业服（12护甲）",
-      "随身：PDA，科技扫描仪，背式推进器，医疗箱"
-    ],
-    notes: [
-      "作风：专业、冷静、近乎苛刻。",
-      "文森特对你有投射/依赖迹象。",
-      "我渴望‘稳定的普通生活’，但我已经不相信那东西会真的出现。"
-    ]
-  },
-
-  andrew: {
-    summary: [
-      "安德鲁·法克 / 首席谈判代表 / 外交官 / 30岁 男",
-      "政治级别最高的人。将要和‘交易员’（米戈）谈判，拿到折纸计划推进关键数据。",
-      "谈判代表是殖民联邦在这次交易中的脸面。"
-    ],
-    gear: [
-      "武器：科尼尔E-1电子手枪，格洛克23",
-      "防护：联邦制服（2护甲），重型真空作业服（12护甲）",
-      "随身：PDA，科技扫描仪，背式推进器，折纸计划过滤结构图纸（加密磁盘）"
-    ],
-    notes: [
-      "信念：‘为了让人类文明活下去，必须付出一切代价。",
-      "语言：会米戈语（65%）。我不信任它们，但它们就是筹码。",
-      "备注：讨厌肉。吃肉让我生理性反胃。"
-    ]
-  },
-
-  damien: {
-    summary: [
-      "达米恩·冈恩 / 炮手 & 安保 / 26岁 男",
-      "角斗士号电磁炮手，也是船上火力与登舰安保的主要执行者。",
-      "最近也被当半个工程备援使用。"
-    ],
-    gear: [
-      "武器：科尼尔E-1电子手枪，格洛克23，科尼尔E-2电子步枪，Skorpion SMG",
-      "防护：联邦制服（2护甲），重型真空作业服（12护甲）",
-      "随身：PDA，科技扫描仪，维修工具，背式推进器，应急泡沫密封胶，圣克里斯多福链坠"
-    ],
-    notes: [
-      "倾向：‘别再逃了，打回地球。’这就是人生信条。",
-      "风险点：一旦听到“我们可能永远回不了地球”，我会冲动反应。",
-      "自我定位：我需要自己是英雄。这是我活下去的意义。"
-    ]
-  }
-};
-
-/* =========================
-   profile 权限系统
-   - requester 看 target
-   - andrew: 全权限
-   - diana: 全权限（医疗官）
-   - vincent: 特批可看 lola
-   - 其他人: 只能看自己
-   ========================= */
+// =============== 权限和渲染工具 ===============
 function canViewProfile(requester, target) {
-  if (requester === target) return true;        // 自己看自己：允许
-  if (requester === "andrew") return true;      // 外交官：全舰权限
-  if (requester === "diana") return true;       // 医疗官：全舰医疗权限
-  if (requester === "vincent" && target === "lola") return true; // 文森特盯萝拉
+  if (requester === target) return true;
+  if (requester === "andrew") return true;
+  if (requester === "diana") return true;
+  if (requester === "vincent" && target === "lola") return true;
   return false;
 }
 
 function renderProfileData(target) {
-  const data = crewProfiles[target];
+  const data = window.crewProfiles && window.crewProfiles[target];
   if (!data) {
     return [
       "档案不存在或已被清除。",
@@ -259,26 +119,10 @@ function renderProfileData(target) {
   ];
 }
 
+// =============== profile 命令 ===============
 function profile(args) {
-  const user = localStorage.getItem("loggedUser") || "visitor";
-  const target = args && args[0] ? args[0].toLowerCase() : user;
-  const data = crewProfiles[target];
-  if (!data) return { message: ["无此档案或权限不足。"] };
-
-  const result = [
-    "<p class='glow'>档案：" + target + "</p>",
-    ...data.summary,
-    "",
-    "装备：",
-    ...data.gear,
-    "",
-    "心理记录：",
-    ...data.notes
-  ];
-  return { message: result };
-}
-window.profile = profile;
-
+  const requester = localStorage.getItem("loggedUser") || "visitor";
+  const target = (args && args[0] ? args[0] : requester).toLowerCase();
 
   if (!canViewProfile(requester, target)) {
     return {
@@ -300,41 +144,22 @@ window.profile = profile;
     message: renderProfileData(target)
   };
 }
+window.profile = profile;
 
-/* =========================
-   ACKNOWLEDGE：
-   - 游客/visitor：拒绝
-   - 舰员：回传加密回执
-   说明：
-   ACKNOWLEDGE 的名字会被登记在 software.json，
-   这样终端解析器允许执行它，
-   真正的输出逻辑在这里。
-   ========================= */
+// =============== ACKNOWLEDGE 命令 ===============
 function ACKNOWLEDGE() {
   const user = localStorage.getItem("loggedUser") || "visitor";
-  if (user === "visitor") return { message: ["❌ 未授权访客无法执行该指令。"] };
+  if (user === "visitor") {
+    return {
+      delayed: 0,
+      clear: false,
+      message: ["❌ 未授权访客无法执行该指令。"]
+    };
+  }
+
   return {
+    delayed: 10,
+    clear: false,
     message: [
-      `<p class='glow'>Ω-3 回执确认成功</p>`,
-      `舰员 ${user} 已确认折纸计划任务。`,
-      `加密信号已发送至 殖民联邦行动司令部。`
-    ]
-  };
-}
-window.ACKNOWLEDGE = ACKNOWLEDGE;
-
-// 这三块是我们之前写的——人物卡库、权限判断、渲染
-// const crewProfiles = { martin: {...}, lola: {...}, ... }
-// function canViewProfile(requester, target) { ... }
-// function renderProfileData(target) { ... }
-
-// 暴露给全局（kernel.js 的 system.crew 会用到）
-window.crewProfiles = crewProfiles;
-window.canViewProfile = canViewProfile;
-window.renderProfileData = renderProfileData;
-
-// 同时把三个命令暴露成可调用程序（给 software.json / kernel.runSoftware 用）
-window.status = status;
-window.profile = profile;
-window.ACKNOWLEDGE = ACKNOWLEDGE;
-window.acknowledge = ACKNOWLEDGE;
+      "<p class='glow'>Ω-3 回执确认成功</p>",
+      `舰员 ${user} 已确认折纸计
